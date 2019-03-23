@@ -8,6 +8,10 @@ import android.graphics.PointF;
 import android.util.AttributeSet;
 import android.view.View;
 
+
+/**
+ * Custom view class to visually represent eye tracking data on the background view of the app
+ */
 public class DrawView extends View {
     private DrawableEye leftEye = new DrawableEye();
     private DrawableEye rightEye = new DrawableEye();
@@ -25,30 +29,12 @@ public class DrawView extends View {
         initialize();
     }
 
-    private void initialize()
-    {
-        leftEyePaint = new Paint();
-        leftEyePaint.setColor(Color.BLUE);
-        rightEyePaint = new Paint();
-        rightEyePaint.setColor(Color.RED);
-
-        leftEye = new DrawableEye();
-        rightEye = new DrawableEye();
-    }
-
-
-    @Override
-    protected void onDraw(Canvas canvas) {
-
-        if (leftEye != null && leftEye.isVisible()) {
-            canvas.drawCircle(leftEye.getPosition().x, leftEye.getPosition().y, leftEye.getPupilDiameter(), leftEyePaint);
-        }
-        if(rightEye != null && rightEye.isVisible()) {
-            canvas.drawCircle(rightEye.getPosition().x, rightEye.getPosition().y, rightEye.getPupilDiameter(), rightEyePaint);
-        }
-
-    }
-
+    /**
+     * Update the drawable eyes to represent the generated positions
+     * @param id
+     * @param position
+     * @param pupilDiameter
+     */
     public void updateEye(boolean id, PointF position, float pupilDiameter)
     {
         if (id) //false is left eye
@@ -66,4 +52,36 @@ public class DrawView extends View {
 
         invalidate();
     }
+
+    /**
+     * Set the paints and other parameters of the eye objects
+     */
+    private void initialize()
+    {
+        leftEyePaint = new Paint();
+        leftEyePaint.setColor(Color.BLUE);
+        rightEyePaint = new Paint();
+        rightEyePaint.setColor(Color.RED);
+
+        leftEye = new DrawableEye();
+        rightEye = new DrawableEye();
+    }
+
+
+    /**
+     * Override draw to draw the eyes with the updated data parameters
+     * @param canvas
+     */
+    @Override
+    protected void onDraw(Canvas canvas) {
+
+        if (leftEye != null && leftEye.isVisible()) {
+            canvas.drawCircle(leftEye.getPosition().x, leftEye.getPosition().y, leftEye.getPupilDiameter(), leftEyePaint);
+        }
+        if(rightEye != null && rightEye.isVisible()) {
+            canvas.drawCircle(rightEye.getPosition().x, rightEye.getPosition().y, rightEye.getPupilDiameter(), rightEyePaint);
+        }
+
+    }
+
 }

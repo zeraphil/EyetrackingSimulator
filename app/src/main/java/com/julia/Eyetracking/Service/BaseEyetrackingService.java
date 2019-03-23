@@ -12,6 +12,7 @@ import android.util.Log;
 
 import com.julia.Eyetracking.Constants;
 import com.julia.Eyetracking.DataModel.EyetrackingData;
+import com.julia.Eyetracking.Simulator.EyeballSimulator;
 import com.julia.Eyetracking.Simulator.ISimulator;
 import com.julia.Eyetracking.Simulator.RandomSimulator;
 import com.julia.Eyetracking.Simulator.SimulatorType;
@@ -59,7 +60,7 @@ public class BaseEyetrackingService extends Service {
     public BaseEyetrackingService()
     {
         clientMessengers = new ArrayList<>();
-        simulatorType = SimulatorType.RANDOM;
+        simulatorType = SimulatorType.EYEBALL;
         setSimulatorType(simulatorType);
     }
 
@@ -69,6 +70,9 @@ public class BaseEyetrackingService extends Service {
         {
             case RANDOM:
                 simulator = new RandomSimulator();
+                break;
+            case EYEBALL:
+                simulator = new EyeballSimulator();
                 break;
         }
     }
