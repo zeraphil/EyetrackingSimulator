@@ -1,9 +1,11 @@
 package com.julia.Eyetracking;
 
+import android.arch.persistence.room.Room;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
@@ -15,17 +17,34 @@ import android.util.Log;
 import android.view.View;
 
 import com.julia.Eyetracking.DataModel.EyetrackingData;
+import com.julia.Eyetracking.DataModel.EyetrackingDatabase;
+import com.julia.Eyetracking.DataModel.InsertEyetrackingToDatabaseTask;
+import com.julia.Eyetracking.DataModel.ReportDatabaseEntriesTask;
 import com.julia.Eyetracking.Service.BaseEyetrackingService;
 import com.julia.Eyetracking.Service.EyetrackingServiceMessages;
 
 public class MainActivity extends AppCompatActivity {
 
-    Messenger serviceMessenger;
-    Messenger replyToMessenger = new Messenger(new IncomingMessageHandler());
+    private boolean isBound;
+    private Messenger serviceMessenger;
+    private Messenger replyToMessenger = new Messenger(new IncomingMessageHandler());
+    private EyetrackingDatabase database;
+    //setting reply messenger and handler
+    private class IncomingMessageHandler extends Handler {
 
-    boolean isBound;
+        @Override
+        public void handleMessage(Message msg) {
+            //Log.d(this.getClass().toString(), "Handle message called.");
+            switch (msg.what) {
+                case EyetrackingServiceMessages.DATA:
+                    onNewDataMessage(msg);
+                default:
+                    super.handleMessage(msg);
+            }
+        }
+    }
 
-    ServiceConnection connection = new ServiceConnection() {
+    private ServiceConnection connection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             Log.d("MainActivity", "Connected to service");
@@ -45,12 +64,32 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        this.database = Room.databaseBuilder(this.getApplicationContext(), EyetrackingDatabase.class, Constants.EyetrackingDatabase).fallbackToDestructiveMigration().build();
     }
 
-    public void bindServiceToggle(View view)
+    @Override
+    protected void onStart() {
+        super.onStart();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        // Unbind from the service
+        if (isBound) {
+            bindService(false);
+            isBound = false;
+        }
+    }
+
+    private void onNewDataMessage(Message message)
     {
-        Log.d("MainActivity", "Toggle button called");
-        bindService(!isBound);
+        EyetrackingData data = message.getData().getParcelable(Constants.EyetrackingDataParcel);
+
+        InsertEyetrackingToDatabaseTask task = new InsertEyetrackingToDatabaseTask(this.database);
+        task.execute(data.toSerializable());
+
+        Log.d(this.getClass().toString(), data.getTimestamp().toString());
     }
 
     private void bindService(boolean bind)
@@ -74,7 +113,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public void registerToService()
+    private void registerToService()
     {
         if (!isBound) return;
         // Create and send a message to the service, using a supported 'what' value
@@ -89,8 +128,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
-    public void unregisterFromService()
+    private void unregisterFromService()
     {
         if (!isBound) return;
         // Create and send a message to the service, using a supported 'what' value
@@ -101,41 +139,15 @@ public class MainActivity extends AppCompatActivity {
         } catch (RemoteException e) {
             Log.e("MainActivity",Log.getStackTraceString(e));
         }
+
+        ReportDatabaseEntriesTask task = new ReportDatabaseEntriesTask(this.database);
+        task.execute();
     }
 
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        // Unbind from the service
-        if (isBound)
-        {
-            bindService(false);
-            isBound = false;
-        }
-    }
-
-    //setting reply messenger and handler
-    Messenger incomingMessenger = new Messenger(new IncomingMessageHandler());
-
-    public class IncomingMessageHandler extends Handler {
-
-        @Override
-        public void handleMessage(Message msg) {
-            //Log.d(this.getClass().toString(), "Handle message called.");
-            switch (msg.what) {
-                case EyetrackingServiceMessages.DATA:
-                    EyetrackingData data = msg.getData().getParcelable(Constants.EyetrackingDataParcel);
-                    Log.d(this.getClass().toString(), data.timestamp.toString());
-                default:
-                    super.handleMessage(msg);
-            }
-        }
+    public void bindServiceToggle(View view)
+    {
+        Log.d("MainActivity", "Toggle button called");
+        bindService(!isBound);
     }
 
 }

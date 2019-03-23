@@ -26,12 +26,12 @@ public class RandomSimulator implements ISimulator {
         Random rand  = new Random();
 
         EyetrackingData data = new EyetrackingData();
-        data.confidence = rand.nextFloat();
-        data.id = rand.nextBoolean();
-        data.normalizedPosX = rand.nextFloat() * widthBounds;
-        data.normalizedPosY = rand.nextFloat() * heightBounds;
-        data.pupilDiameter = rand.nextInt(this.maxPupilDiameter);
-        data.timestamp = Timestamp.now();
+        data.setConfidence(rand.nextFloat());
+        data.setId(rand.nextBoolean());
+        data.setNormalizedPosX(rand.nextFloat() * widthBounds);
+        data.setNormalizedPosY(rand.nextFloat() * heightBounds);
+        data.setPupilDiameter(this.maxPupilDiameter);
+        data.setTimestamp(Timestamp.now());
 
         return data;
     }
