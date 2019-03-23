@@ -11,12 +11,9 @@ public class ReportDatabaseEntriesTask extends AsyncTask<Void, Void, Void> {
     {
         this.database = database;
     }
-
     @Override
     protected Void doInBackground(Void...params) {
         Log.d(this.getClass().toString(), String.format("%d data entries added to the database", this.database.dbOperations().getAll().size()));
-
         return null;
     }
-
 }

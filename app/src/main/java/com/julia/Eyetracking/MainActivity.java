@@ -5,7 +5,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.os.AsyncTask;
+import android.graphics.PointF;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
@@ -17,11 +17,15 @@ import android.util.Log;
 import android.view.View;
 
 import com.julia.Eyetracking.DataModel.EyetrackingData;
+import com.julia.Eyetracking.DataModel.EyetrackingDataSerializable;
 import com.julia.Eyetracking.DataModel.EyetrackingDatabase;
 import com.julia.Eyetracking.DataModel.InsertEyetrackingToDatabaseTask;
 import com.julia.Eyetracking.DataModel.ReportDatabaseEntriesTask;
 import com.julia.Eyetracking.Service.BaseEyetrackingService;
 import com.julia.Eyetracking.Service.EyetrackingServiceMessages;
+
+import java.util.ArrayList;
+import java.util.concurrent.LinkedBlockingQueue;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -29,6 +33,11 @@ public class MainActivity extends AppCompatActivity {
     private Messenger serviceMessenger;
     private Messenger replyToMessenger = new Messenger(new IncomingMessageHandler());
     private EyetrackingDatabase database;
+
+    private static final int serializationItemThreshold = 1000;
+    private LinkedBlockingQueue<EyetrackingDataSerializable> serializableDataQueue = new LinkedBlockingQueue<>();
+
+    DrawView drawView;
     //setting reply messenger and handler
     private class IncomingMessageHandler extends Handler {
 
@@ -65,6 +74,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         this.database = Room.databaseBuilder(this.getApplicationContext(), EyetrackingDatabase.class, Constants.EyetrackingDatabase).fallbackToDestructiveMigration().build();
+        drawView = findViewById(R.id.view);
     }
 
     @Override
@@ -86,10 +96,34 @@ public class MainActivity extends AppCompatActivity {
     {
         EyetrackingData data = message.getData().getParcelable(Constants.EyetrackingDataParcel);
 
-        InsertEyetrackingToDatabaseTask task = new InsertEyetrackingToDatabaseTask(this.database);
-        task.execute(data.toSerializable());
+        drawView.updateEye(data.getId(), new PointF(data.getNormalizedPosX(), data.getNormalizedPosY()), data.getPupilDiameter());
+
+        try {
+            serializableDataQueue.put(data.toSerializable());
+        }
+        catch (InterruptedException e)
+        {
+            Log.e(this.getClass().toString(), "interrupted thread");
+        }
+
+        if (serializableDataQueue.size() > serializationItemThreshold )
+        {
+            serializeQueueToDatabase();
+        }
 
         Log.d(this.getClass().toString(), data.getTimestamp().toString());
+    }
+
+    private void serializeQueueToDatabase()
+    {
+        Log.d(this.getClass().toString(), "Dumping Queue To database");
+
+        ArrayList<EyetrackingDataSerializable> dataList = new ArrayList<>();
+        serializableDataQueue.drainTo(dataList);
+        InsertEyetrackingToDatabaseTask task = new InsertEyetrackingToDatabaseTask(this.database);
+        EyetrackingDataSerializable[] array = new EyetrackingDataSerializable[dataList.size()];
+        array = dataList.toArray(array);
+        task.execute(array);
     }
 
     private void bindService(boolean bind)
@@ -100,6 +134,7 @@ public class MainActivity extends AppCompatActivity {
                 Log.d("MainActivity",BaseEyetrackingService.class.toString());
 
                 bindService(new Intent(this, BaseEyetrackingService.class), this.connection, Context.BIND_AUTO_CREATE);
+                isBound = true;
             }
             catch (Exception e) {
 
@@ -110,6 +145,7 @@ public class MainActivity extends AppCompatActivity {
         {
             unregisterFromService();
             unbindService(this.connection);
+            isBound = false;
         }
     }
 
@@ -140,13 +176,19 @@ public class MainActivity extends AppCompatActivity {
             Log.e("MainActivity",Log.getStackTraceString(e));
         }
 
+        if (serializableDataQueue.size() > 0 )
+        {
+            serializeQueueToDatabase();
+        }
+
         ReportDatabaseEntriesTask task = new ReportDatabaseEntriesTask(this.database);
         task.execute();
+
     }
 
     public void bindServiceToggle(View view)
     {
-        Log.d("MainActivity", "Toggle button called");
+        Log.d("MainActivity", "Toggle button called" + isBound);
         bindService(!isBound);
     }
 

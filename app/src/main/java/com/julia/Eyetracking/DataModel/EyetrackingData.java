@@ -51,7 +51,7 @@ public class EyetrackingData implements Parcelable {
         this.uniqueID = uniqueID;
     }
 
-    public boolean isId() {
+    public boolean getId() {
         return id;
     }
 
