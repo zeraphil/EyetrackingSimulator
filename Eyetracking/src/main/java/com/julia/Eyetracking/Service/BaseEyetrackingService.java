@@ -164,8 +164,7 @@ public class BaseEyetrackingService extends Service {
 
         @Override
         public void handleMessage(Message msg) {
-            Log.d(this.getClass().toString(), "Handle message called.");
-
+            //Log.d(this.getClass().toString(), "Handle message called.");
             switch (msg.what) {
                 case EyetrackingServiceMessages.REGISTER:
                     onRegisterMessage(msg);

@@ -16,6 +16,7 @@ import com.julia.Eyetracking.Constants;
 import com.julia.Eyetracking.DataModel.EyetrackingData;
 import com.julia.Eyetracking.DataModel.EyetrackingDatabase;
 import com.julia.Eyetracking.DataModel.SerializableEyetrackingData;
+import com.julia.Eyetracking.Tasks.InsertEyetrackingToDatabaseTask;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -102,6 +103,11 @@ public class DatabaseRoomService extends Service {
         {
             Log.e(this.getClass().toString(), Log.getStackTraceString(e));
         }
+
+        if(serializableDataQueue.size() > serializationItemThreshold)
+        {
+            serializeQueueToDatabase();
+        }
     }
 
     /**
@@ -113,13 +119,27 @@ public class DatabaseRoomService extends Service {
         Log.d(this.getClass().toString(), "Dumping Queue To database");
 
         ArrayList<SerializableEyetrackingData> dataList = new ArrayList<>();
+        //drain the queue to a collection that will go into the database (freeing up the queue)
         this.serializableDataQueue.drainTo(dataList);
         this.database.dbOperations().insertBatchEyetrackingData(dataList);
-        //Don't need an async task anymore as I'm running this service on its own thread
-        /*InsertEyetrackingToDatabaseTask task = new InsertEyetrackingToDatabaseTask(this.database);
-        //SerializableEyetrackingData[] array = new SerializableEyetrackingData[dataList.size()];
-        //array = dataList.toArray(array);
-        //task.execute(array);*/
+    }
+
+    /**
+     * Run this method to put in the last batch of messages when an unbind operation happens on the main thread
+     */
+    private void cleanupQueue()
+    {
+        Log.d(this.getClass().toString(), "Cleaning Queue into database on unbind");
+        if(serializableDataQueue.size() > 0)
+        {
+            ArrayList<SerializableEyetrackingData> dataList = new ArrayList<>();
+            this.serializableDataQueue.drainTo(dataList);
+            //need the async task to carry this operation out from an unbind call
+            InsertEyetrackingToDatabaseTask task = new InsertEyetrackingToDatabaseTask(this.database);
+            SerializableEyetrackingData[] array = new SerializableEyetrackingData[dataList.size()];
+            array = dataList.toArray(array);
+            task.execute(array);
+        }
     }
 
 
@@ -134,7 +154,7 @@ public class DatabaseRoomService extends Service {
     @Override
     public boolean onUnbind(Intent intent){
         this.handlerThread.quitSafely();
-        System.out.println("unbound");
+        cleanupQueue();
         return false;
     }
 }

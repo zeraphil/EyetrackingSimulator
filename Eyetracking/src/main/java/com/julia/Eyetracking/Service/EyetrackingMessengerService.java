@@ -37,13 +37,13 @@ public class EyetrackingMessengerService extends BaseEyetrackingService {
     {
         Bundle bundle = new Bundle();
         bundle.putParcelable(Constants.EYETRACKING_DATA_PARCEL, data);
-        bundle.putLong(Constants.IPC_TIMESTAMP, Instant.now().toEpochMilli());
-
         ArrayList<Messenger> deadClients = new ArrayList<>();
 
         for(Messenger m : this.clientMessengers)
         {
             Message message = Message.obtain(null, EyetrackingServiceMessages.PARCEL_DATA, 0 , 0);
+            bundle.putLong(Constants.IPC_TIMESTAMP, Instant.now().toEpochMilli());
+
             message.setData(bundle);
 
             try {
@@ -67,6 +67,7 @@ public class EyetrackingMessengerService extends BaseEyetrackingService {
     @Override
     protected void onRegisterMessage(Message msg)
     {
+        super.onRegisterMessage(msg);
         this.clientMessengers.add(msg.replyTo);
         if(this.clientMessengers.size() > 0 && !this.simulating)
         {
@@ -82,6 +83,7 @@ public class EyetrackingMessengerService extends BaseEyetrackingService {
     @Override
     protected void onUnregisterMessage(Message msg)
     {
+        super.onUnregisterMessage(msg);
         this.clientMessengers.remove(msg.replyTo);
         if(this.clientMessengers.size() <= 0)
         {
