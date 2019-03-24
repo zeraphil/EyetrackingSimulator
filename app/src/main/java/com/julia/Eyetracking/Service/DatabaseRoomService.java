@@ -93,7 +93,6 @@ public class DatabaseRoomService extends Service {
                     if (data != null) {
                         this.serializableDataQueue.put(data.toSerializable());
                     }
-
                     break;
             }
         }

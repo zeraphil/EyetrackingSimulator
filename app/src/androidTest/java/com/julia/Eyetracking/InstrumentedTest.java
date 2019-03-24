@@ -13,6 +13,7 @@ import com.julia.Eyetracking.Simulator.RandomSimulator;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -93,7 +94,20 @@ public class InstrumentedTest {
 
         }
         Log.d(this.getClass().toString(), "Time completed: " + (Instant.now().toEpochMilli() - timePrior));
+    }
 
+    /**
+     * Stub, service test rule doesn't seem to work
+     */
+   // @Rule
+    //public final ServiceTestRule mServiceRule = new ServiceTestRule();
+
+    @Test
+    public void testWithBoundService() {
+       /* IBinder binder = mServiceRule.bindService(
+                new Intent(InstrumentationRegistry.getTargetContext(), EyetrackingFlatBufferService.class));
+        MyService service = ((MyService.LocalBinder) binder).getService();
+        assertTrue("True wasn't returned", service.doSomethingToReturnTrue());*/
     }
 
 }
