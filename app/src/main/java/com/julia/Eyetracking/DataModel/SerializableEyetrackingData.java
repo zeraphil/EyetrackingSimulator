@@ -8,7 +8,7 @@ import java.io.Serializable;
 
 /**
  * Class that decomposes the message to parameters that the Android Room implementation can understand,
- * the special com.julia.Eyetracking.FlatBufferSchema.Timestamp class cannot be data converted...
+ * the special Timestamp class cannot be data converted...
  */
 @Entity
 public class SerializableEyetrackingData implements Serializable {

@@ -7,7 +7,7 @@ import java.time.Instant;
 import java.util.Locale;
 
 /**
- * Parcelable com.julia.Eyetracking.FlatBufferSchema.Timestamp class
+ * Parcelable Timestamp class
  */
 public class Timestamp implements Parcelable {
 

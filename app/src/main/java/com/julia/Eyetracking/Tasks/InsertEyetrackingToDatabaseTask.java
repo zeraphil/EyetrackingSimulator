@@ -1,7 +1,10 @@
-package com.julia.Eyetracking.DataModel;
+package com.julia.Eyetracking.Tasks;
 
 import android.os.AsyncTask;
 import android.util.Log;
+
+import com.julia.Eyetracking.DataModel.EyetrackingDatabase;
+import com.julia.Eyetracking.DataModel.SerializableEyetrackingData;
 
 /**
  * Async class to batch process a queue of messages.

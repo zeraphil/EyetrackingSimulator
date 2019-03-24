@@ -4,13 +4,13 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 import com.google.flatbuffers.FlatBufferBuilder;
-import com.julia.Eyetracking.FlatBufferSchema.Message;
+import com.julia.Eyetracking.DataModel.FlatBufferSchema.Message;
 
 import java.nio.ByteBuffer;
 import java.util.UUID;
 
 /**
- * Class to hold the Eyetracking data com.julia.Eyetracking.FlatBufferSchema.Message with a Parcelable interface for passing to Binder framework
+ * Class to hold the Eyetracking data Message with a Parcelable interface for passing to Binder framework
  */
 public class EyetrackingData implements Parcelable {
 
@@ -50,7 +50,7 @@ public class EyetrackingData implements Parcelable {
     {
         FlatBufferBuilder builder = new FlatBufferBuilder(0);
         int uuid = builder.createString(this.uniqueID);
-        int ts =com.julia.Eyetracking.FlatBufferSchema.Timestamp.createTimestamp
+        int ts = com.julia.Eyetracking.DataModel.FlatBufferSchema.Timestamp.createTimestamp
                 (builder, this.timestamp.getSeconds(), this.timestamp.getNanoseconds());
 
         Message.startMessage(builder);
@@ -61,7 +61,7 @@ public class EyetrackingData implements Parcelable {
         Message.addNormalizedPosY(builder, this.normalizedPosY);
         Message.addPupilDiameter(builder, this.pupilDiameter);
 
-        Message.addTimestamp(builder, com.julia.Eyetracking.FlatBufferSchema.Timestamp.createTimestamp
+        Message.addTimestamp(builder, com.julia.Eyetracking.DataModel.FlatBufferSchema.Timestamp.createTimestamp
                 (builder, this.timestamp.getSeconds(), this.timestamp.getNanoseconds()));
 
         int msg = Message.endMessage(builder);
