@@ -8,6 +8,9 @@ import android.arch.persistence.room.Update;
 
 import java.util.List;
 
+/**
+ * Interface to handle the Android Room CRUD operations. Currently just insert/get
+ */
 @Dao
 public interface DbOperations {
     @Insert

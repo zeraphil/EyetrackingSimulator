@@ -10,7 +10,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <service android:enabled="true"
-            android:name=".Service.BaseEyetrackingService"/>
+            android:name=".Service.MessengerEyetrackingService"/>
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

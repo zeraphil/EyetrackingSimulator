@@ -3,6 +3,9 @@ package com.julia.Eyetracking.DataModel;
 import android.os.AsyncTask;
 import android.util.Log;
 
+/**
+ * Async class to batch process a queue of messages.
+ */
 public class InsertEyetrackingToDatabaseTask extends AsyncTask<EyetrackingDataSerializable, Void, Void> {
 
     private EyetrackingDatabase database;

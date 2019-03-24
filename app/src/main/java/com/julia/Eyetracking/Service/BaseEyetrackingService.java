@@ -2,15 +2,12 @@ package com.julia.Eyetracking.Service;
 
 import android.app.Service;
 import android.content.Intent;
-import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
-import android.os.RemoteException;
 import android.util.Log;
 
-import com.julia.Eyetracking.Constants;
 import com.julia.Eyetracking.DataModel.EyetrackingData;
 import com.julia.Eyetracking.Simulator.EyeballSimulator;
 import com.julia.Eyetracking.Simulator.ISimulator;
@@ -19,31 +16,37 @@ import com.julia.Eyetracking.Simulator.SimulatorType;
 
 import java.util.ArrayList;
 
+/**
+ * Class that defines the simulation paradigm, variables, and methods of the service,
+ * but only puts messages into log
+ */
 public class BaseEyetrackingService extends Service {
 
     /**
      * Target we publish for clients to send messages to IncomingMessageHandler.
      */
-    private Messenger incomingMessenger;
-    private ArrayList<Messenger> clientMessengers;
+    protected Messenger incomingMessenger;
 
     /**
      * Simulation fields
      */
-    private boolean simulating = false;
-    private final int updateInterval = 16; // 1/60 seconds, in milliseconds
-    private SimulatorType simulatorType;
-    private ISimulator simulator;
+    protected boolean simulating = false;
+    protected final int updateInterval = 16; // 1/60 seconds, in milliseconds
+    protected SimulatorType simulatorType;
+    protected ISimulator simulator;
+
 
     /**
      * The Service thread that will run our simulation and send messages
      */
     private final Handler handler = new Handler();
-    private Runnable runnable = new Runnable() {
+    protected Runnable runnable = new Runnable() {
         @Override
         public void run() {
             try{
+                //get the data on every simulation update
                 EyetrackingData data = simulator.update(updateInterval);
+                //then send it through the overriden interface
                 sendData(data);
                 //Log.d(this.getClass().toString(), data.timestamp.toString());
             }
@@ -57,67 +60,65 @@ public class BaseEyetrackingService extends Service {
         }
     };
 
-    public BaseEyetrackingService()
+    BaseEyetrackingService()
     {
-        clientMessengers = new ArrayList<>();
-        simulatorType = SimulatorType.EYEBALL;
+        this.simulatorType = SimulatorType.EYEBALL;
         setSimulatorType(simulatorType);
     }
 
+    @Override
+    public IBinder onBind(Intent intent) {
+        Log.d(this.getClass().toString(), "Service is bound.");
+        this.incomingMessenger = new Messenger(new IncomingMessageHandler());
+        return this.incomingMessenger.getBinder();
+    }
+
+    /**
+     * Override this method to change the behavior of the data sending in the service
+     * @param data
+     */
+    public void sendData(EyetrackingData data)
+    {
+        Log.d(this.getClass().toString(), data.toString());
+    }
+
+    /**
+     * Method to change the simulation type
+     * @param type
+     */
     public void setSimulatorType(SimulatorType type)
     {
         switch(type)
         {
             case RANDOM:
-                simulator = new RandomSimulator();
+                this.simulator = new RandomSimulator();
                 break;
             case EYEBALL:
-                simulator = new EyeballSimulator();
+                this.simulator = new EyeballSimulator();
                 break;
         }
     }
 
-    private void sendData(EyetrackingData data)
+    /**
+     * Method to register a client and begin the simulation
+     * @param msg
+     */
+    protected void onRegisterMessage(Message msg)
     {
-        Bundle bundle = new Bundle();
-        bundle.putParcelable(Constants.EyetrackingDataParcel, data);
-
-        Message message = Message.obtain(null, EyetrackingServiceMessages.DATA, 0 , 0);
-        message.setData(bundle);
-
-        for(Messenger m : clientMessengers)
-        {
-            try {
-                m.send(message);
-            }
-            catch (RemoteException e)
-            {
-                Log.e(this.getClass().toString(), Log.getStackTraceString(e));
-            }
-        }
     }
 
-    public void registerClient(Messenger m)
+    /**
+     * Method to unregister the client and stop the simulation if necessary
+     * @param msg
+     */
+    protected void onUnregisterMessage(Message msg)
     {
-        clientMessengers.add(m);
-        if(clientMessengers.size() > 0 && !this.simulating)
-        {
-            Log.d(this.getClass().toString(), "Have a client, start simulation");
-            startSimulation();
-        }
     }
 
-    public void unregisterClient(Messenger m)
-    {
-        clientMessengers.remove(m);
-        if(clientMessengers.size() <= 0)
-        {
-            Log.d(this.getClass().toString(), "No clients, stopping simulation");
-            stopSimulation();
-        }
-    }
-
-    private void startSimulation()
+    /**
+     * Start the simulation in the handler
+     */
+    protected void startSimulation()
     {
         if (this.simulator == null)
         {
@@ -127,12 +128,18 @@ public class BaseEyetrackingService extends Service {
         this.simulating = true;
     }
 
-    private void stopSimulation()
+    /**
+     * Stop the simulation in the handler and set simulating to false
+     */
+    protected void stopSimulation()
     {
-       this.handler.removeCallbacks(runnable);
-       this.simulating = false;
+        this.handler.removeCallbacks(runnable);
+        this.simulating = false;
     }
 
+    /**
+     * Handle the register/unregister messages
+     */
     public class IncomingMessageHandler extends Handler {
 
         @Override
@@ -141,11 +148,11 @@ public class BaseEyetrackingService extends Service {
 
             switch (msg.what) {
                 case EyetrackingServiceMessages.REGISTER:
-                    registerClient(msg.replyTo);
+                    onRegisterMessage(msg);
                     Log.d(this.getClass().toString(), "Registering client");
                     break;
                 case EyetrackingServiceMessages.UNREGISTER:
-                    unregisterClient(msg.replyTo);
+                    onUnregisterMessage(msg);
                     break;
                 default:
                     super.handleMessage(msg);
@@ -153,11 +160,4 @@ public class BaseEyetrackingService extends Service {
         }
     }
 
-
-    @Override
-    public IBinder onBind(Intent intent) {
-        Log.d(this.getClass().toString(), "Service is bound.");
-        incomingMessenger = new Messenger(new IncomingMessageHandler());
-        return incomingMessenger.getBinder();
-    }
 }

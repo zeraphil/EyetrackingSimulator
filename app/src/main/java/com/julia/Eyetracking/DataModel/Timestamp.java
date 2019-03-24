@@ -5,7 +5,11 @@ import android.os.Parcelable;
 
 import java.time.Instant;
 
+/**
+ * Parcelable Timestamp class
+ */
 public class Timestamp implements Parcelable {
+
     private long seconds;
     private int nanoseconds;
 

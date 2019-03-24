@@ -5,6 +5,9 @@ import android.os.Parcelable;
 
 import java.util.UUID;
 
+/**
+ * Class to hold the Eyetracking data Message with a Parcelable interface for passing to Binder framework
+ */
 public class EyetrackingData implements Parcelable {
 
     private String uniqueID;

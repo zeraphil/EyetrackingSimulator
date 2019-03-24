@@ -3,6 +3,9 @@ package com.julia.Eyetracking;
 import android.graphics.Point;
 import android.graphics.PointF;
 
+/**
+ * Data class to hold some parameters inside DrawView
+ */
 public class DrawableEye {
 
     private PointF position;
@@ -18,6 +21,10 @@ public class DrawableEye {
         this.pupilDiameter = pupilDiameter;
         this.isVisible = true;
     }
+
+    /**
+     * Getter/setters
+     */
 
     public PointF getPosition() {
         return position;
