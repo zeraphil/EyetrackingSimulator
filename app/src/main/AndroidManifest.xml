@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    package="com.julia.Eyetracking">
+    package="com.julia.EyetrackingApp">
 
     <application
         android:allowBackup="true"
@@ -13,14 +13,14 @@
         tools:ignore="GoogleAppIndexingWarning">
         <service android:enabled="true"
             android:exported="false"
-            android:name=".Service.EyetrackingMessengerService"/>
+            android:name="com.julia.Eyetracking.Service.EyetrackingMessengerService"/>
         <service android:enabled="true"
             android:exported="false"
-            android:name=".Service.EyetrackingFlatBufferService"/>
+            android:name="com.julia.Eyetracking.Service.EyetrackingFlatBufferService"/>
         <service android:enabled="true"
             android:exported="false"
-            android:name=".Service.DatabaseRoomService"/>
-        <activity android:name=".MainActivity">
+            android:name="com.julia.Eyetracking.Service.DatabaseRoomService"/>
+        <activity android:name="com.julia.EyetrackingApp.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
