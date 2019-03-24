@@ -16,6 +16,7 @@ import com.julia.Eyetracking.Constants;
 import com.julia.Eyetracking.DataModel.EyetrackingData;
 
 import java.lang.ref.WeakReference;
+import java.nio.ByteBuffer;
 
 
 /**
@@ -36,6 +37,11 @@ public class ServiceConnectionManager {
      * Flag to invoke the database service connection when binding
      */
     private boolean storeToDatabase = false;
+
+    /**
+     * Answer to the "what to use for networked connection"
+     */
+    private boolean doFlatBufferService = true;
 
     /**
      * Messenger/service connection pair for communicating with the eyetracking data stream service
@@ -113,7 +119,8 @@ public class ServiceConnectionManager {
         public void handleMessage(Message msg) {
             //Log.d(this.getClass().toString(), "Handle message called.");
             switch (msg.what) {
-                case EyetrackingServiceMessages.DATA:
+                case EyetrackingServiceMessages.FLATBUFFER_DATA:
+                case EyetrackingServiceMessages.PARCEL_DATA:
                     this.manager.get().onNewDataMessage(msg);
                 default:
                     super.handleMessage(msg);
@@ -131,7 +138,15 @@ public class ServiceConnectionManager {
         {         // Bind to the service
             try {
                 Log.d(this.getClass().toString(), EyetrackingMessengerService.class.toString());
-                currentActivity.bindService(new Intent(currentActivity, EyetrackingMessengerService.class), this.eyetrackingServiceConnection, Context.BIND_AUTO_CREATE);
+                if (!doFlatBufferService)
+                {
+                    currentActivity.bindService(new Intent(currentActivity, EyetrackingMessengerService.class), this.eyetrackingServiceConnection, Context.BIND_AUTO_CREATE);
+                }
+                else
+                {
+                    currentActivity.bindService(new Intent(currentActivity, EyetrackingFlatBufferService.class), this.eyetrackingServiceConnection, Context.BIND_AUTO_CREATE);
+                }
+
                 if(this.storeToDatabase)
                 {
                     this.currentActivity.bindService(new Intent(currentActivity, DatabaseRoomService.class), this.databaseServiceConnection, Context.BIND_AUTO_CREATE);
@@ -165,31 +180,39 @@ public class ServiceConnectionManager {
 
     /**
      * Handle a message containing data, and pass it to the listener
+     * Handle the data types depending on the dytpe of data message
      * @param message
      */
     public void onNewDataMessage(Message message) {
         //Get the data from the message parcel
-        EyetrackingData data = message.getData().getParcelable(Constants.EyetrackingDataParcel);
-        if(listener != null) {
-            this.listener.onEyetrackingDataMessage(data);
-        }
-        if(storeToDatabase)
-        {
-          // sendMessageToDatabaseService(new Message(message));
-        }
-    }
 
-    private void sendMessageToDatabaseService(Message message) {
-
-        if(this.databaseServiceMessenger != null) {
-            try {
-                this.databaseServiceMessenger.send((message));
-            } catch (RemoteException e) {
-                Log.e("MainActivity", Log.getStackTraceString(e));
+        switch (message.what) {
+            case EyetrackingServiceMessages.PARCEL_DATA:
+            EyetrackingData data = message.getData().getParcelable(Constants.EyetrackingDataParcel);
+            if(data != null) {
+                if (listener != null) {
+                    this.listener.onEyetrackingDataMessage(data);
+                }
             }
+            break;
+            case EyetrackingServiceMessages.FLATBUFFER_DATA:
+                ByteBuffer buffer = ByteBuffer.wrap(message.getData().getByteArray(Constants.EyetrackingDataBytes));
+                buffer.position(message.getData().getInt(Constants.ByteBufferPosition));
+                try {
+                    data = new EyetrackingData(buffer);
+                    if (data != null) {
+                        if (listener != null) {
+                            this.listener.onEyetrackingDataMessage(data);
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    Log.e(this.getClass().toString(), Log.getStackTraceString(e));
+                }
+                break;
         }
     }
-
 
     /**
      * Creates a message to register the activity to the service

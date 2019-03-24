@@ -8,20 +8,17 @@ import android.util.Log;
 import com.julia.Eyetracking.Constants;
 import com.julia.Eyetracking.DataModel.EyetrackingData;
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
-/**
- * Service that uses the binder framework for IPC
- * Override the sendData/register/unregister methods from the base service model
- */
-public class EyetrackingMessengerService extends BaseEyetrackingService {
+public class EyetrackingFlatBufferService extends BaseEyetrackingService{
 
     /**
      * Target we publish for clients to send messages to IncomingMessageHandler.
      */
     protected ArrayList<Messenger> clientMessengers;
 
-    public EyetrackingMessengerService()
+    public EyetrackingFlatBufferService()
     {
         super();
         this.clientMessengers = new ArrayList<>();
@@ -35,13 +32,15 @@ public class EyetrackingMessengerService extends BaseEyetrackingService {
     public void sendData(EyetrackingData data)
     {
         Bundle bundle = new Bundle();
-        bundle.putParcelable(Constants.EyetrackingDataParcel, data);
+        ByteBuffer buf = data.toFlatBuffer();
+        bundle.putInt(Constants.ByteBufferPosition, buf.position());
+        bundle.putByteArray(Constants.EyetrackingDataBytes, buf.array());
 
         ArrayList<Messenger> deadClients = new ArrayList<>();
 
         for(Messenger m : this.clientMessengers)
         {
-            Message message = Message.obtain(null, EyetrackingServiceMessages.PARCEL_DATA, 0 , 0);
+            Message message = Message.obtain(null, EyetrackingServiceMessages.FLATBUFFER_DATA, 0 , 0);
             message.setData(bundle);
 
             try {
@@ -102,5 +101,6 @@ public class EyetrackingMessengerService extends BaseEyetrackingService {
             }
         }
     }
+
 
 }

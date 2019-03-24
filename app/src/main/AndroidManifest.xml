@@ -16,6 +16,9 @@
             android:name=".Service.EyetrackingMessengerService"/>
         <service android:enabled="true"
             android:exported="false"
+            android:name=".Service.EyetrackingFlatBufferService"/>
+        <service android:enabled="true"
+            android:exported="false"
             android:name=".Service.DatabaseRoomService"/>
         <activity android:name=".MainActivity">
             <intent-filter>

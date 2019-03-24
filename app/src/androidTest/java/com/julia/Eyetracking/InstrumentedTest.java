@@ -16,6 +16,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.nio.ByteBuffer;
 import java.time.Instant;
 import java.util.List;
 
@@ -64,6 +65,34 @@ public class InstrumentedTest {
 
         database.dbOperations().deleteAll();
         //Assert.assertEquals(all.size(), 0);
+    }
+
+    /**
+     * Test to ensure flat buffer serial/deserial works
+     *
+     */
+
+    @Test public void flatBufferTest()
+    {
+        RandomSimulator simulator = new RandomSimulator();
+        long timePrior = Instant.now().toEpochMilli();
+
+        for(int i = 0; i < iterations; i++)
+        {
+            EyetrackingData data = simulator.update(1);
+            ByteBuffer buf = data.toFlatBuffer();
+            byte[] arr = buf.array();
+
+            ByteBuffer bff = ByteBuffer.wrap(arr);
+            //test it immediately
+            EyetrackingData fbData = new EyetrackingData(bff);
+            //did we deserialize correctly
+           // Log.d("test", data.getUniqueID());
+           // Log.d("test", fbData.getUniqueID());
+            Assert.assertEquals(data.getUniqueID(), fbData.getUniqueID());
+
+        }
+        Log.d(this.getClass().toString(), "Time completed: " + (Instant.now().toEpochMilli() - timePrior));
 
     }
 

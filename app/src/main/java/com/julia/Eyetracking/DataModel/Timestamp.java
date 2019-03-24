@@ -7,7 +7,7 @@ import java.time.Instant;
 import java.util.Locale;
 
 /**
- * Parcelable Timestamp class
+ * Parcelable com.julia.Eyetracking.FlatBufferSchema.Timestamp class
  */
 public class Timestamp implements Parcelable {
 
@@ -55,6 +55,8 @@ public class Timestamp implements Parcelable {
         this.seconds = in.readLong();
         this.nanoseconds = in.readInt();
     }
+
+
 
     public static final Parcelable.Creator<Timestamp> CREATOR = new Parcelable.Creator<Timestamp>() {
         @Override

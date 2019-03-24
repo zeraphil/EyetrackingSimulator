@@ -17,6 +17,7 @@ import com.julia.Eyetracking.DataModel.EyetrackingData;
 import com.julia.Eyetracking.DataModel.EyetrackingDatabase;
 import com.julia.Eyetracking.DataModel.SerializableEyetrackingData;
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -60,7 +61,7 @@ public class DatabaseRoomService extends Service {
                 case EyetrackingServiceMessages.UNREGISTER:
                     Log.d(this.getClass().toString(), "Unregister message called.");
                     break;
-                case EyetrackingServiceMessages.DATA:
+                case EyetrackingServiceMessages.PARCEL_DATA:
                     onNewDataMessage(msg);
                 default:
                     super.handleMessage(msg);
@@ -69,26 +70,40 @@ public class DatabaseRoomService extends Service {
     }
 
     /**
-     * Handle a message containing data, including serializing it and updating the visualization
+     * Handle a message containing data, including serializing it to the database
+     * Handle the data types depending on the dtype of data message
      * @param message
      */
-    private void onNewDataMessage(Message message)
-    {
-        EyetrackingData data = message.getData().getParcelable(Constants.EyetrackingDataParcel);
+    public void onNewDataMessage(Message message) {
+        //Get the data from the message parcel
 
-        //add to our queue, and dump/drain if necessary
         try {
-            this.serializableDataQueue.put(data.toSerializable());
+            switch (message.what) {
+                case EyetrackingServiceMessages.PARCEL_DATA:
+                    EyetrackingData data = message.getData().getParcelable(Constants.EyetrackingDataParcel);
+                    if (data != null) {
+                        this.serializableDataQueue.put(data.toSerializable());
+                    }
+                    break;
+                case EyetrackingServiceMessages.FLATBUFFER_DATA:
+                    ByteBuffer buffer = ByteBuffer.wrap(message.getData().getByteArray(Constants.EyetrackingDataBytes));
+                    buffer.position(message.getData().getInt(Constants.ByteBufferPosition));
+
+                    data = new EyetrackingData(buffer);
+                    if (data != null) {
+                        this.serializableDataQueue.put(data.toSerializable());
+                    }
+
+                    break;
+            }
         }
         catch (InterruptedException e)
         {
-            Log.e(this.getClass().toString(), "interrupted thread");
+            Log.e(this.getClass().toString(), Log.getStackTraceString(e));
         }
-
-        //every second or so do a batch job
-        if (this.serializableDataQueue.size() > serializationItemThreshold )
+        catch (Exception e)
         {
-            serializeQueueToDatabase();
+            Log.e(this.getClass().toString(), Log.getStackTraceString(e));
         }
     }
 

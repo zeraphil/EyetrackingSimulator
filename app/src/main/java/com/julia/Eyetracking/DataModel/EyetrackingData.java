@@ -3,10 +3,14 @@ package com.julia.Eyetracking.DataModel;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import com.google.flatbuffers.FlatBufferBuilder;
+import com.julia.Eyetracking.FlatBufferSchema.Message;
+
+import java.nio.ByteBuffer;
 import java.util.UUID;
 
 /**
- * Class to hold the Eyetracking data Message with a Parcelable interface for passing to Binder framework
+ * Class to hold the Eyetracking data com.julia.Eyetracking.FlatBufferSchema.Message with a Parcelable interface for passing to Binder framework
  */
 public class EyetrackingData implements Parcelable {
 
@@ -36,6 +40,33 @@ public class EyetrackingData implements Parcelable {
         entity.setPupilDiameter(this.pupilDiameter);
 
         return entity;
+    }
+
+    /**
+     * To flat buffer, for more modularity
+     * @return
+     */
+    public ByteBuffer toFlatBuffer()
+    {
+        FlatBufferBuilder builder = new FlatBufferBuilder(0);
+        int uuid = builder.createString(this.uniqueID);
+        int ts =com.julia.Eyetracking.FlatBufferSchema.Timestamp.createTimestamp
+                (builder, this.timestamp.getSeconds(), this.timestamp.getNanoseconds());
+
+        Message.startMessage(builder);
+        Message.addUniqueId(builder, uuid);
+        Message.addConfidence(builder, this.confidence);
+        Message.addID(builder, this.id);
+        Message.addNormalizedPosX(builder, this.normalizedPosX);
+        Message.addNormalizedPosY(builder, this.normalizedPosY);
+        Message.addPupilDiameter(builder, this.pupilDiameter);
+
+        Message.addTimestamp(builder, com.julia.Eyetracking.FlatBufferSchema.Timestamp.createTimestamp
+                (builder, this.timestamp.getSeconds(), this.timestamp.getNanoseconds()));
+
+        int msg = Message.endMessage(builder);
+        Message.finishMessageBuffer(builder, msg);
+        return builder.dataBuffer();
     }
 
     /**
@@ -112,6 +143,18 @@ public class EyetrackingData implements Parcelable {
         dest.writeFloat(this.normalizedPosX);
         dest.writeFloat(this.normalizedPosY);
         dest.writeInt(this.pupilDiameter);
+    }
+
+    public EyetrackingData(ByteBuffer flatBuffer)
+    {
+        Message in = Message.getRootAsMessage(flatBuffer);
+        this.uniqueID = in.UniqueId();
+        this.timestamp = new Timestamp(in.Timestamp().seconds(), in.Timestamp().nanoseconds());
+        this.id = in.ID();
+        this.confidence = in.Confidence();
+        this.normalizedPosX =  in.NormalizedPosX();
+        this.normalizedPosY = in.NormalizedPosY();
+        this.pupilDiameter = in.PupilDiameter();
     }
 
     protected EyetrackingData(Parcel in) {
