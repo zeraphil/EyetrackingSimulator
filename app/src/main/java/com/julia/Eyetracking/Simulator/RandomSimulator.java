@@ -10,14 +10,11 @@ import java.util.Random;
 public class RandomSimulator implements ISimulator {
 
     //Simulator Internals
-    int widthBounds;
-    int heightBounds;
-    int maxPupilDiameter = 6;
+    int maxPupilDiameter = 60;
 
     public RandomSimulator()
     {
-        this.heightBounds = Resources.getSystem().getDisplayMetrics().heightPixels;
-        this.widthBounds = Resources.getSystem().getDisplayMetrics().widthPixels;
+
     }
 
     @Override
@@ -28,8 +25,8 @@ public class RandomSimulator implements ISimulator {
         EyetrackingData data = new EyetrackingData();
         data.setConfidence(rand.nextFloat());
         data.setId(rand.nextBoolean());
-        data.setNormalizedPosX(rand.nextFloat() * widthBounds);
-        data.setNormalizedPosY(rand.nextFloat() * heightBounds);
+        data.setNormalizedPosX(rand.nextFloat());
+        data.setNormalizedPosY(rand.nextFloat());
         data.setPupilDiameter(this.maxPupilDiameter);
         data.setTimestamp(Timestamp.now());
 

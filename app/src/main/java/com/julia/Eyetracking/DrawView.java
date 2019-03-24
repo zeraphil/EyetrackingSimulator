@@ -32,20 +32,20 @@ public class DrawView extends View {
     /**
      * Update the drawable eyes to represent the generated positions
      * @param id
-     * @param position
+     * @param normalizedPosition
      * @param pupilDiameter
      */
-    public void updateEye(boolean id, PointF position, float pupilDiameter)
+    public void updateEye(boolean id, PointF normalizedPosition, float pupilDiameter)
     {
         if (id) //false is left eye
         {
-            leftEye.setPosition(position);
+            leftEye.setPosition(normalizedPosition);
             leftEye.setPupilDiameter(pupilDiameter);
             leftEye.setVisible(true);
         }
         else
         {
-            rightEye.setPosition(position);
+            rightEye.setPosition(normalizedPosition);
             rightEye.setPupilDiameter(pupilDiameter);
             rightEye.setVisible(true);
         }
@@ -60,8 +60,12 @@ public class DrawView extends View {
     {
         leftEyePaint = new Paint();
         leftEyePaint.setColor(Color.BLUE);
+        leftEyePaint.setAlpha(127);
+        leftEyePaint.setAntiAlias(true);
         rightEyePaint = new Paint();
         rightEyePaint.setColor(Color.RED);
+        rightEyePaint.setAlpha(127);
+        rightEyePaint.setAntiAlias(true);
 
         leftEye = new DrawableEye();
         rightEye = new DrawableEye();
@@ -76,10 +80,10 @@ public class DrawView extends View {
     protected void onDraw(Canvas canvas) {
 
         if (leftEye != null && leftEye.isVisible()) {
-            canvas.drawCircle(leftEye.getPosition().x, leftEye.getPosition().y, leftEye.getPupilDiameter(), leftEyePaint);
+            canvas.drawCircle(leftEye.getPosition().x*this.getWidth(), leftEye.getPosition().y *this.getHeight(), leftEye.getPupilDiameter(), leftEyePaint);
         }
         if(rightEye != null && rightEye.isVisible()) {
-            canvas.drawCircle(rightEye.getPosition().x, rightEye.getPosition().y, rightEye.getPupilDiameter(), rightEyePaint);
+            canvas.drawCircle(rightEye.getPosition().x *this.getWidth(), rightEye.getPosition().y * this.getHeight(), rightEye.getPupilDiameter(), rightEyePaint);
         }
 
     }

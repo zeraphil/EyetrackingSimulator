@@ -6,8 +6,8 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 
 import com.julia.Eyetracking.DataModel.EyetrackingData;
-import com.julia.Eyetracking.DataModel.EyetrackingDatabase_Impl;
 import com.julia.Eyetracking.DataModel.Timestamp;
+import com.julia.Eyetracking.HelperMethods;
 
 import java.util.Random;
 
@@ -18,10 +18,10 @@ import java.util.Random;
 public class EyeballSimulator implements ISimulator {
 
     Random random = new Random();
-    private final static long MaximumFixationTime = 5000;
+    private final static long MaximumFixationTime = 3000;
     private final static float SaccadeSpeed = 15; //15 radians per second
-    private final static float MaximumPupilDiameter = 6;
-    private final static double TargetDistanceThreshold = 5;
+    private final static float MaximumPupilDiameter = 60;
+    private final static double TargetDistanceThreshold = .05;
     //simulator internals
     private PointF fixationTarget = new PointF();
     private float fixationTime;
@@ -30,7 +30,7 @@ public class EyeballSimulator implements ISimulator {
 
     private PointF currentLeftEyePosition;
     private PointF currentRightEyePosition;
-    private float interpupillaryDistance = .03f; // in m
+    private float ipd = .03f; // normalized interpupillary distance
     private boolean leftEye = true;
 
     private float distanceFromScreen = 1; //in meters
@@ -47,8 +47,8 @@ public class EyeballSimulator implements ISimulator {
         //this.xDpm = dm.xdpi * 0.0254;
         //this.yDpm = dm.ydpi * 0.0254;
 
-        this.currentRightEyePosition = new PointF(widthBounds/2 - interpupillaryDistance, heightBounds/2);
-        this.currentLeftEyePosition = new PointF(widthBounds/2 + interpupillaryDistance, heightBounds/2);
+        this.currentRightEyePosition = new PointF(0.5f+this.ipd, 0.5f);
+        this.currentLeftEyePosition = new PointF(0.5f-this.ipd, 0.5f);
     }
 
     @Override
@@ -81,7 +81,7 @@ public class EyeballSimulator implements ISimulator {
 
         EyetrackingData data = new EyetrackingData();
         data.setTimestamp(Timestamp.now());
-        data.setPupilDiameter(3 + Math.round(random.nextFloat()*(MaximumPupilDiameter-3)));
+        data.setPupilDiameter(Math.round(MaximumPupilDiameter - random.nextFloat()*3));
         data.setNormalizedPosX(currentEyePosition.x);
         data.setNormalizedPosY(currentEyePosition.y);
         data.setId(leftEye);
@@ -99,7 +99,7 @@ public class EyeballSimulator implements ISimulator {
      */
     private void newFixationTarget()
     {
-        this.fixationTarget = new PointF(random.nextFloat() * widthBounds, random.nextFloat() * heightBounds );
+        this.fixationTarget = new PointF((random.nextFloat() * widthBounds)/widthBounds, (random.nextFloat() * heightBounds)/heightBounds );
         this.fixationTime = Math.round(random.nextFloat() * MaximumFixationTime);
 
         Log.d(this.getClass().toString(), String.format("New fixation target at x %f, y %f", this.fixationTarget.x, this.fixationTarget.y));
@@ -111,12 +111,13 @@ public class EyeballSimulator implements ISimulator {
         //movements arc, delta time to seconds
         float arc = SaccadeSpeed * deltaTime/1000 * this.distanceFromScreen;
         double chordLength = Math.sin(SaccadeSpeed/2*deltaTime/1000) * this.distanceFromScreen * 2;
-        PointF leftEyeToTarget = vectorBetweenTwoPoints(this.fixationTarget, currentLeftEyePosition);
+        PointF leftEyeToTarget = HelperMethods.vectorDifference(this.fixationTarget, currentLeftEyePosition);
 
-        if (distanceOfVectorDifference(leftEyeToTarget) < TargetDistanceThreshold)
+        if (HelperMethods.vectorDistance(this.fixationTarget, currentLeftEyePosition) < TargetDistanceThreshold)
         {
-            currentLeftEyePosition.x += random.nextFloat()*2;
-            currentLeftEyePosition.y += random.nextFloat()*2;
+            //add some random noise
+            currentLeftEyePosition.x += random.nextFloat()*.001;
+            currentLeftEyePosition.y += random.nextFloat()*.001;
         }
         else
         {
@@ -124,41 +125,19 @@ public class EyeballSimulator implements ISimulator {
             currentLeftEyePosition.y += -leftEyeToTarget.y*chordLength;
         }
 
-        PointF rightEyeToTarget = vectorBetweenTwoPoints(this.fixationTarget, currentLeftEyePosition);
+        PointF rightEyeToTarget = HelperMethods.vectorDifference(this.fixationTarget, currentRightEyePosition);
 
-        if (distanceOfVectorDifference(rightEyeToTarget) < TargetDistanceThreshold)
+        if (HelperMethods.vectorDistance(this.fixationTarget, currentRightEyePosition) < TargetDistanceThreshold)
         {
-            currentRightEyePosition.x += random.nextFloat()*2;
-            currentRightEyePosition.y += random.nextFloat()*2;
+            //add some random noise
+            currentRightEyePosition.x += random.nextFloat()*.001;
+            currentRightEyePosition.y += random.nextFloat()*.001;
         }
         else {
             currentRightEyePosition.x += -rightEyeToTarget.x * chordLength;
             currentRightEyePosition.y += -rightEyeToTarget.y * chordLength;
         }
 
-    }
-
-
-    /**
-     * Helper method to get the distance between the points represented as a PointF (but really the
-     * vector components
-     * @param a
-     * @param b
-     * @return
-     */
-    private PointF vectorBetweenTwoPoints(PointF a, PointF b)
-    {
-        return new PointF(b.x-a.x, b.y - a.y);
-    }
-
-    /**
-     * Get the distance, using the value from the above method
-     * @param v
-     * @return
-     */
-    private double distanceOfVectorDifference(PointF v)
-    {
-        return Math.sqrt(Math.pow(v.x, 2) + Math.pow(v.y, 2));
     }
 
 }

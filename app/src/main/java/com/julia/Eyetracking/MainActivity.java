@@ -45,7 +45,7 @@ public class MainActivity extends AppCompatActivity {
      * Serialization parameters
      */
     private EyetrackingDatabase database;
-    private static final int serializationItemThreshold = 1000;
+    private static final int serializationItemThreshold = 100;
     private LinkedBlockingQueue<EyetrackingDataSerializable> serializableDataQueue = new LinkedBlockingQueue<>();
 
     DrawView drawView;
@@ -128,14 +128,15 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+
     /**
      * Handle a message containing data, including serializing it and updating the visualization
      * @param message
      */
     private void onNewDataMessage(Message message)
     {
-        averageLatency = (Instant.now().toEpochMilli() - lastTimestamp);
-        textView.setText(String.format("Latency: %f", averageLatency));
+        averageLatency = HelperMethods.ExponentialMovingAverage(averageLatency, Instant.now().toEpochMilli() - lastTimestamp, 0.8);
+
         //Get the data from the message parcel
         EyetrackingData data = message.getData().getParcelable(Constants.EyetrackingDataParcel);
 
@@ -154,6 +155,7 @@ public class MainActivity extends AppCompatActivity {
         if (serializableDataQueue.size() > serializationItemThreshold )
         {
             serializeQueueToDatabase();
+            textView.setText(String.format("Latency: %2f ms", averageLatency));
         }
 
         Log.d(this.getClass().toString(), data.getTimestamp().toString());
@@ -216,7 +218,6 @@ public class MainActivity extends AppCompatActivity {
         try {
             Log.d("MainActivity", "Registering to service");
             serviceMessenger.send(msg);
-            lastTimestamp = Instant.now().toEpochMilli();
         } catch (RemoteException e) {
 
             Log.e("MainActivity",Log.getStackTraceString(e));
@@ -234,7 +235,6 @@ public class MainActivity extends AppCompatActivity {
         msg.replyTo = replyToMessenger;
         try {
             serviceMessenger.send(msg);
-            lastTimestamp = Instant.now().toEpochMilli();
         } catch (RemoteException e) {
             Log.e("MainActivity",Log.getStackTraceString(e));
         }
@@ -246,7 +246,6 @@ public class MainActivity extends AppCompatActivity {
 
         ReportDatabaseEntriesTask task = new ReportDatabaseEntriesTask(this.database);
         task.execute();
-
     }
 
 }

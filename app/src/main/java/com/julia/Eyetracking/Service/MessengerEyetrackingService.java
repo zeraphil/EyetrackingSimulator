@@ -32,6 +32,10 @@ public class MessengerEyetrackingService extends BaseEyetrackingService {
 
     }
 
+    /**
+     * Method sends data to all registered clients implementing the replyTo Messenger
+     * @param data
+     */
     @Override
     public void sendData(EyetrackingData data)
     {
@@ -49,6 +53,8 @@ public class MessengerEyetrackingService extends BaseEyetrackingService {
             catch (RemoteException e)
             {
                 Log.e(this.getClass().toString(), Log.getStackTraceString(e));
+                //this client is probably dead, mark to remove
+
             }
         }
     }
