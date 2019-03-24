@@ -23,6 +23,8 @@ import com.julia.Eyetracking.DataModel.SerializableEyetrackingData;
 import com.julia.Eyetracking.DataModel.EyetrackingDatabase;
 import com.julia.Eyetracking.DataModel.InsertEyetrackingToDatabaseTask;
 import com.julia.Eyetracking.DataModel.ReportDatabaseEntriesTask;
+import com.julia.Eyetracking.Service.EyetrackingServiceConnection;
+import com.julia.Eyetracking.Service.IEyetrackingDataListener;
 import com.julia.Eyetracking.Service.MessengerEyetrackingService;
 import com.julia.Eyetracking.Service.EyetrackingServiceMessages;
 import com.julia.Eyetracking.UI.DrawView;
@@ -35,12 +37,12 @@ public class MainActivity extends AppCompatActivity {
 
     private long lastTimestamp = 0;
     private double averageLatency = 0.0;
+
     /**
-     * Service connection parameters
+     * Connection module
      */
-    private boolean isBound;
-    private Messenger serviceMessenger;
-    private Messenger replyToMessenger = new Messenger(new IncomingMessageHandler());
+    EyetrackingServiceConnection serviceConnection;
+    IEyetrackingDataListener eyetrackingDataListener;
 
     /**
      * Serialization parameters
@@ -52,35 +54,6 @@ public class MainActivity extends AppCompatActivity {
     DrawView drawView;
     TextView textView;
     //Incoming message handler, mainly to handle data messages
-    private class IncomingMessageHandler extends Handler {
-        @Override
-        public void handleMessage(Message msg) {
-            //Log.d(this.getClass().toString(), "Handle message called.");
-            switch (msg.what) {
-                case EyetrackingServiceMessages.DATA:
-                    onNewDataMessage(msg);
-                default:
-                    super.handleMessage(msg);
-            }
-        }
-    }
-
-    //the connection that will manage the service
-    private ServiceConnection connection = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            Log.d(this.getClass().toString(), "Connected to service");
-            isBound = true;
-            serviceMessenger = new Messenger(service);
-            registerToService();
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-            isBound = false;
-            serviceMessenger = null;
-        }
-    };
 
     /**
      * Method called from the button to Toggle processing
@@ -88,17 +61,24 @@ public class MainActivity extends AppCompatActivity {
      */
     public void bindServiceToggle(View view)
     {
-        Log.d(this.getClass().toString(), "Toggle button called" + isBound);
-        bindService(!isBound);
+        Log.d(this.getClass().toString(), "Toggle button called" + serviceConnection.isBound());
+
         Button toggle = (Button)findViewById(R.id.button);
-        if (isBound)
+        if (serviceConnection.isBound())
         {
-            toggle.setText("Stop");
+            serviceConnection.connectToService(false);
+            toggle.setText("Start");
+            if (serializableDataQueue.size() > 0 )
+            {
+                serializeQueueToDatabase();
+            }
+            drawView.clearDrawView();
+
         }
         else
         {
-            toggle.setText("Start");
-
+            serviceConnection.connectToService(true);
+            toggle.setText("Stop");
         }
     }
 
@@ -111,6 +91,14 @@ public class MainActivity extends AppCompatActivity {
         drawView = findViewById(R.id.view);
         textView = findViewById(R.id.textView);
 
+        this.eyetrackingDataListener = new IEyetrackingDataListener() {
+            @Override
+            public void onEyetrackingDataMessage(EyetrackingData data) {
+                onNewDataMessage(data);
+            }
+        };
+
+        serviceConnection = new EyetrackingServiceConnection(this, this.eyetrackingDataListener);
     }
 
     @Override
@@ -122,23 +110,23 @@ public class MainActivity extends AppCompatActivity {
     protected void onStop() {
         super.onStop();
         // Unbind from the service
-        if (isBound) {
-            bindService(false);
-            isBound = false;
+        if (serviceConnection.isBound()) {
+            serviceConnection.connectToService(false);
+            if (serializableDataQueue.size() > 0 )
+            {
+                serializeQueueToDatabase();
+            }
         }
     }
 
 
     /**
      * Handle a message containing data, including serializing it and updating the visualization
-     * @param message
+     * @param data
      */
-    private void onNewDataMessage(Message message)
+    private void onNewDataMessage(EyetrackingData data)
     {
         averageLatency = HelperMethods.ExponentialMovingAverage(averageLatency, Instant.now().toEpochMilli() - lastTimestamp, 0.8);
-
-        //Get the data from the message parcel
-        EyetrackingData data = message.getData().getParcelable(Constants.EyetrackingDataParcel);
 
         //update our visualization
         drawView.updateEye(data.getId(), new PointF(data.getNormalizedPosX(), data.getNormalizedPosY()), data.getPupilDiameter());
@@ -179,73 +167,6 @@ public class MainActivity extends AppCompatActivity {
         task.execute(array);
     }
 
-    /**
-     * Method to toggle between bound/unbound states
-     * @param bind
-     */
-    private void bindService(boolean bind)
-    {
-        if(bind)
-        {         // Bind to the service
-            try {
-                Log.d(this.getClass().toString(), MessengerEyetrackingService.class.toString());
 
-                bindService(new Intent(this, MessengerEyetrackingService.class), this.connection, Context.BIND_AUTO_CREATE);
-                isBound = true;
-            }
-            catch (Exception e) {
-
-                Log.e(this.getClass().toString(),Log.getStackTraceString(e));
-            }
-        }
-        else
-        {
-            unregisterFromService();
-            unbindService(this.connection);
-            isBound = false;
-        }
-    }
-
-    /**
-     * Creates a message to register the activity to the service
-     */
-    private void registerToService()
-    {
-        if (!isBound) return;
-        // Create and send a message to the service, using a supported 'what' value
-        Message msg = Message.obtain(null, EyetrackingServiceMessages.REGISTER, 0, 0);
-        msg.replyTo = replyToMessenger;
-        try {
-            Log.d(this.getClass().toString(), "Registering to service");
-            serviceMessenger.send(msg);
-        } catch (RemoteException e) {
-
-            Log.e("MainActivity",Log.getStackTraceString(e));
-        }
-    }
-
-    /**
-     * Creates a message to unregister the activity to the service
-     */
-    private void unregisterFromService()
-    {
-        if (!isBound) return;
-        // Create and send a message to the service, using a supported 'what' value
-        Message msg = Message.obtain(null, EyetrackingServiceMessages.UNREGISTER, 0, 0);
-        msg.replyTo = replyToMessenger;
-        try {
-            serviceMessenger.send(msg);
-        } catch (RemoteException e) {
-            Log.e(this.getClass().toString(),Log.getStackTraceString(e));
-        }
-
-        if (serializableDataQueue.size() > 0 )
-        {
-            serializeQueueToDatabase();
-        }
-
-        ReportDatabaseEntriesTask task = new ReportDatabaseEntriesTask(this.database);
-        task.execute();
-    }
 
 }

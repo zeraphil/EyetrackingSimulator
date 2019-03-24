@@ -5,6 +5,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.PointF;
+import android.graphics.PorterDuff;
 import android.util.AttributeSet;
 import android.view.View;
 
@@ -53,6 +54,16 @@ public class DrawView extends View {
     }
 
     /**
+     * Method to clear the view from eye data
+     */
+    public void clearDrawView()
+    {
+        leftEye = new DrawableEye();
+        rightEye = new DrawableEye();
+        invalidate();
+    }
+
+    /**
      * Set the paints and other parameters of the eye objects
      */
     private void initialize()
@@ -77,6 +88,8 @@ public class DrawView extends View {
      */
     @Override
     protected void onDraw(Canvas canvas) {
+        super.onDraw(canvas);
+        canvas.drawColor(Color.WHITE);
 
         if (leftEye != null && leftEye.isVisible()) {
             canvas.drawCircle(leftEye.getPosition().x*this.getWidth(), leftEye.getPosition().y *this.getHeight(), leftEye.getPupilDiameter(), leftEyePaint);
@@ -84,6 +97,7 @@ public class DrawView extends View {
         if(rightEye != null && rightEye.isVisible()) {
             canvas.drawCircle(rightEye.getPosition().x *this.getWidth(), rightEye.getPosition().y * this.getHeight(), rightEye.getPupilDiameter(), rightEyePaint);
         }
+
 
     }
 
