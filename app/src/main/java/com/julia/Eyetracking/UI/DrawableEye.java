@@ -14,7 +14,7 @@ public class DrawableEye {
 
     public DrawableEye() {
         this.isVisible = false;
-    };
+    }
 
     public DrawableEye(PointF position, float pupilDiameter) {
         this.position = position;

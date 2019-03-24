@@ -4,6 +4,7 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 import java.time.Instant;
+import java.util.Locale;
 
 /**
  * Parcelable Timestamp class
@@ -26,7 +27,7 @@ public class Timestamp implements Parcelable {
 
     @Override
     public String toString() {
-        return String.format("Seconds %d", this.seconds);
+        return String.format(Locale.US, "Seconds %d", this.seconds);
     }
 
     public long getSeconds()

@@ -3,7 +3,9 @@ package com.julia.Eyetracking.Service;
 import android.app.Service;
 import android.content.Intent;
 import android.os.Handler;
+import android.os.HandlerThread;
 import android.os.IBinder;
+import android.os.Looper;
 import android.os.Message;
 import android.os.Messenger;
 import android.util.Log;
@@ -34,10 +36,13 @@ public class BaseEyetrackingService extends Service {
     protected SimulatorType simulatorType;
     protected ISimulator simulator;
 
+    //this thread will do simulation and message handling
+    protected HandlerThread handlerThread = new HandlerThread("EyetrackingThread");
+
     /**
      * The Service thread that will run our simulation and send messages
      */
-    private final Handler handler = new Handler();
+    private Handler handler;
     protected Runnable runnable = new Runnable() {
         @Override
         public void run() {
@@ -58,7 +63,7 @@ public class BaseEyetrackingService extends Service {
         }
     };
 
-    BaseEyetrackingService()
+    public BaseEyetrackingService()
     {
         this.simulatorType = SimulatorType.EYEBALL;
         setSimulatorType(simulatorType);
@@ -67,8 +72,18 @@ public class BaseEyetrackingService extends Service {
     @Override
     public IBinder onBind(Intent intent) {
         Log.d(this.getClass().toString(), "Service is bound.");
-        this.incomingMessenger = new Messenger(new IncomingMessageHandler());
+        //run the simulation and messaging on the service's own thread
+        this.handlerThread.start();
+        this.handler = new Handler(handlerThread.getLooper());
+        this.incomingMessenger = new Messenger(new IncomingMessageHandler(handlerThread.getLooper()));
         return this.incomingMessenger.getBinder();
+    }
+
+    @Override
+    public boolean onUnbind(Intent intent){
+        //quit the thread when no one's looking
+        this.handlerThread.quitSafely();
+        return false;
     }
 
     /**
@@ -141,6 +156,11 @@ public class BaseEyetrackingService extends Service {
      * Handle the register/unregister messages
      */
     protected class IncomingMessageHandler extends Handler {
+
+        public IncomingMessageHandler(Looper looper)
+        {
+            super(looper);
+        }
 
         @Override
         public void handleMessage(Message msg) {

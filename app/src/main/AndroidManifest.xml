@@ -12,7 +12,11 @@
         android:theme="@style/AppTheme"
         tools:ignore="GoogleAppIndexingWarning">
         <service android:enabled="true"
-            android:name=".Service.MessengerEyetrackingService"/>
+            android:exported="false"
+            android:name=".Service.EyetrackingMessengerService"/>
+        <service android:enabled="true"
+            android:exported="false"
+            android:name=".Service.DatabaseRoomService"/>
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

@@ -1,13 +1,8 @@
 package com.julia.Eyetracking.Service;
 
-import android.app.Service;
-import android.content.Intent;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
-import android.os.RemoteException;
 import android.util.Log;
 
 import com.julia.Eyetracking.Constants;
@@ -17,15 +12,16 @@ import java.util.ArrayList;
 
 /**
  * Service that uses the binder framework for IPC
+ * Override the sendData/register/unregister methods from the base service model
  */
-public class MessengerEyetrackingService extends BaseEyetrackingService {
+public class EyetrackingMessengerService extends BaseEyetrackingService {
 
     /**
      * Target we publish for clients to send messages to IncomingMessageHandler.
      */
     protected ArrayList<Messenger> clientMessengers;
 
-    public MessengerEyetrackingService()
+    public EyetrackingMessengerService()
     {
         super();
         this.clientMessengers = new ArrayList<>();
@@ -41,17 +37,17 @@ public class MessengerEyetrackingService extends BaseEyetrackingService {
         Bundle bundle = new Bundle();
         bundle.putParcelable(Constants.EyetrackingDataParcel, data);
 
-        Message message = Message.obtain(null, EyetrackingServiceMessages.DATA, 0 , 0);
-        message.setData(bundle);
-
         ArrayList<Messenger> deadClients = new ArrayList<>();
 
         for(Messenger m : this.clientMessengers)
         {
+            Message message = Message.obtain(null, EyetrackingServiceMessages.DATA, 0 , 0);
+            message.setData(bundle);
+
             try {
                 m.send(message);
             }
-            catch (RemoteException e)
+            catch (Exception e)
             {
                 Log.e(this.getClass().toString(), Log.getStackTraceString(e));
                 //this client is probably dead, mark to remove
@@ -98,7 +94,6 @@ public class MessengerEyetrackingService extends BaseEyetrackingService {
      */
     private void removeDeadClients(ArrayList<Messenger> deadClients)
     {
-
         if(deadClients.size() > 0)
         {
             for (Messenger m : deadClients)

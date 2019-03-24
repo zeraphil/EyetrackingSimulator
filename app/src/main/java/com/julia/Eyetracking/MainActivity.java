@@ -1,6 +1,5 @@
 package com.julia.Eyetracking;
 
-import android.arch.persistence.room.Room;
 import android.graphics.PointF;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -10,16 +9,12 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import com.julia.Eyetracking.DataModel.EyetrackingData;
-import com.julia.Eyetracking.DataModel.SerializableEyetrackingData;
-import com.julia.Eyetracking.DataModel.EyetrackingDatabase;
-import com.julia.Eyetracking.DataModel.InsertEyetrackingToDatabaseTask;
-import com.julia.Eyetracking.Service.EyetrackingServiceConnection;
+import com.julia.Eyetracking.Service.ServiceConnectionManager;
 import com.julia.Eyetracking.Service.IEyetrackingDataListener;
 import com.julia.Eyetracking.UI.DrawView;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -32,19 +27,13 @@ public class MainActivity extends AppCompatActivity {
     /**
      * Service connection parameters
      */
-    EyetrackingServiceConnection serviceConnection;
+    ServiceConnectionManager serviceConnection;
 
     /**
      * Listener that will handler our eyetracking data parcel callback
      */
     IEyetrackingDataListener eyetrackingDataListener;
 
-    /**
-     * Serialization parameters
-     */
-    private EyetrackingDatabase database;
-    private static final int serializationItemThreshold = 100;
-    private LinkedBlockingQueue<SerializableEyetrackingData> serializableDataQueue = new LinkedBlockingQueue<>();
 
     /**
      * UI components, to update
@@ -59,24 +48,20 @@ public class MainActivity extends AppCompatActivity {
      */
     public void bindServiceToggle(View view)
     {
-        Log.d(this.getClass().toString(), "Toggle button called" + this.serviceConnection.isBound());
+        Log.d(this.getClass().toString(), "Toggle button called" + this.serviceConnection.areServicesBound());
 
-        Button toggle = (Button)findViewById(R.id.button);
-        if (this.serviceConnection.isBound())
+        Button toggle = findViewById(R.id.button);
+        if (this.serviceConnection.areServicesBound())
         {
             //once we're done, disconnect, and dump the queue
-            this.serviceConnection.connectToService(false);
+            this.serviceConnection.connectToServices(false);
             toggle.setText("Bind");
-            if (this.serializableDataQueue.size() > 0 )
-            {
-                serializeQueueToDatabase();
-            }
             //also clear the visualization
             this.drawView.clearDrawView();
         }
         else
         {
-            this.serviceConnection.connectToService(true);
+            this.serviceConnection.connectToServices(true);
             toggle.setText("Unbind");
         }
     }
@@ -86,18 +71,17 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        this.database = Room.databaseBuilder(this.getApplicationContext(), EyetrackingDatabase.class, Constants.EyetrackingDatabase).fallbackToDestructiveMigration().build();
         this.drawView = findViewById(R.id.view);
         this.textView = findViewById(R.id.textView);
 
         this.eyetrackingDataListener = new IEyetrackingDataListener() {
             @Override
             public void onEyetrackingDataMessage(EyetrackingData data) {
-                onNewDataMessage(data);
+                onNewEyetrackingData(data);
             }
         };
 
-        this.serviceConnection = new EyetrackingServiceConnection(this, this.eyetrackingDataListener);
+        this.serviceConnection = new ServiceConnectionManager(this, this.eyetrackingDataListener, true);
     }
 
     @Override
@@ -109,14 +93,9 @@ public class MainActivity extends AppCompatActivity {
     protected void onStop() {
         super.onStop();
         // Unbind from the service
-        if (this.serviceConnection.isBound()) {
+        if (this.serviceConnection.areServicesBound()) {
             //stop the service, and dump the message queue
-            this.serviceConnection.connectToService(false);
-            if (this.serializableDataQueue.size() > 0 )
-            {
-
-                serializeQueueToDatabase();
-            }
+            this.serviceConnection.connectToServices(false);
         }
     }
 
@@ -125,47 +104,18 @@ public class MainActivity extends AppCompatActivity {
      * Handle a message containing data, including serializing it and updating the visualization
      * @param data
      */
-    private void onNewDataMessage(EyetrackingData data)
+    private void onNewEyetrackingData(EyetrackingData data)
     {
         this.averageLatency = HelperMethods.ExponentialMovingAverage(this.averageLatency, Instant.now().toEpochMilli() - this.lastTimestamp, 0.8);
 
         //update our visualization
         this.drawView.updateEye(data.getId(), new PointF(data.getNormalizedPosX(), data.getNormalizedPosY()), data.getPupilDiameter());
 
-        //add to our queue, and dump/drain if necessary
-        try {
-            this.serializableDataQueue.put(data.toSerializable());
-        }
-        catch (InterruptedException e)
-        {
-            Log.e(this.getClass().toString(), "interrupted thread");
-        }
-
-        if (this.serializableDataQueue.size() > serializationItemThreshold )
-        {
-            serializeQueueToDatabase();
-            this.textView.setText(String.format("Latency: %2f ms", averageLatency));
-        }
+        this.textView.setText(String.format(Locale.US,"Latency: %2f ms", averageLatency));
 
         //Log.d(this.getClass().toString(), data.getTimestamp().toString());
         //set the current time to last
         this.lastTimestamp = Instant.now().toEpochMilli();
-    }
-
-    /**
-     * Method that creates an asynchronous task to batch process messages to the queue.
-     * If the app crashes, we probably lose this data
-     */
-    private void serializeQueueToDatabase()
-    {
-        Log.d(this.getClass().toString(), "Dumping Queue To database");
-
-        ArrayList<SerializableEyetrackingData> dataList = new ArrayList<>();
-        this.serializableDataQueue.drainTo(dataList);
-        InsertEyetrackingToDatabaseTask task = new InsertEyetrackingToDatabaseTask(this.database);
-        SerializableEyetrackingData[] array = new SerializableEyetrackingData[dataList.size()];
-        array = dataList.toArray(array);
-        task.execute(array);
     }
 
 
