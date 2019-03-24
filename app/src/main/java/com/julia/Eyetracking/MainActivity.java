@@ -66,7 +66,7 @@ public class MainActivity extends AppCompatActivity {
         {
             //once we're done, disconnect, and dump the queue
             this.serviceConnection.connectToService(false);
-            toggle.setText("Start");
+            toggle.setText("Bind");
             if (this.serializableDataQueue.size() > 0 )
             {
                 serializeQueueToDatabase();
@@ -77,7 +77,7 @@ public class MainActivity extends AppCompatActivity {
         else
         {
             this.serviceConnection.connectToService(true);
-            toggle.setText("Stop");
+            toggle.setText("Unbind");
         }
     }
 

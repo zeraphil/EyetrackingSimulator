@@ -114,8 +114,8 @@ public class EyeballSimulator implements ISimulator {
         if (HelperMethods.vectorDistance(this.fixationTarget, currentLeftEyePosition) < TargetDistanceThreshold)
         {
             //add some random noise
-            currentLeftEyePosition.x += random.nextFloat()*.001;
-            currentLeftEyePosition.y += random.nextFloat()*.001;
+            currentLeftEyePosition.x += randomSignedFloat()*.001;
+            currentLeftEyePosition.y += randomSignedFloat()*.001;
         }
         else
         {
@@ -128,14 +128,19 @@ public class EyeballSimulator implements ISimulator {
         if (HelperMethods.vectorDistance(this.fixationTarget, currentRightEyePosition) < TargetDistanceThreshold)
         {
             //add some random noise
-            currentRightEyePosition.x += random.nextFloat()*.001;
-            currentRightEyePosition.y += random.nextFloat()*.001;
+            currentRightEyePosition.x += randomSignedFloat()*.001;
+            currentRightEyePosition.y += randomSignedFloat()*.001;
         }
         else {
             currentRightEyePosition.x += -rightEyeToTarget.x * chordLength;
             currentRightEyePosition.y += -rightEyeToTarget.y * chordLength;
         }
 
+    }
+
+    private float randomSignedFloat()
+    {
+        return random.nextFloat()*2 - 1;
     }
 
 }

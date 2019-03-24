@@ -92,10 +92,10 @@ public class DrawView extends View {
         canvas.drawColor(Color.WHITE);
 
         if (leftEye != null && leftEye.isVisible()) {
-            canvas.drawCircle(leftEye.getPosition().x*this.getWidth(), leftEye.getPosition().y *this.getHeight(), leftEye.getPupilDiameter(), leftEyePaint);
+            canvas.drawCircle(leftEye.getPosition().x*this.getWidth(), (1-leftEye.getPosition().y) *this.getHeight(), leftEye.getPupilDiameter(), leftEyePaint);
         }
         if(rightEye != null && rightEye.isVisible()) {
-            canvas.drawCircle(rightEye.getPosition().x *this.getWidth(), rightEye.getPosition().y * this.getHeight(), rightEye.getPupilDiameter(), rightEyePaint);
+            canvas.drawCircle(rightEye.getPosition().x *this.getWidth(), (1-rightEye.getPosition().y) * this.getHeight(), rightEye.getPupilDiameter(), rightEyePaint);
         }
 
 
