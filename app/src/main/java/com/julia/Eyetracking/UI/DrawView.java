@@ -39,15 +39,15 @@ public class DrawView extends View {
     {
         if (id) //false is left eye
         {
-            leftEye.setPosition(normalizedPosition);
-            leftEye.setPupilDiameter(pupilDiameter);
-            leftEye.setVisible(true);
+            this.leftEye.setPosition(normalizedPosition);
+            this.leftEye.setPupilDiameter(pupilDiameter);
+            this.leftEye.setVisible(true);
         }
         else
         {
-            rightEye.setPosition(normalizedPosition);
-            rightEye.setPupilDiameter(pupilDiameter);
-            rightEye.setVisible(true);
+            this.rightEye.setPosition(normalizedPosition);
+            this.rightEye.setPupilDiameter(pupilDiameter);
+            this.rightEye.setVisible(true);
         }
 
         invalidate();
@@ -58,8 +58,8 @@ public class DrawView extends View {
      */
     public void clearDrawView()
     {
-        leftEye = new DrawableEye();
-        rightEye = new DrawableEye();
+        this.leftEye = new DrawableEye();
+        this.rightEye = new DrawableEye();
         invalidate();
     }
 
@@ -68,17 +68,17 @@ public class DrawView extends View {
      */
     private void initialize()
     {
-        leftEyePaint = new Paint();
-        leftEyePaint.setColor(Color.BLUE);
-        leftEyePaint.setAlpha(127);
-        leftEyePaint.setAntiAlias(true);
-        rightEyePaint = new Paint();
-        rightEyePaint.setColor(Color.RED);
-        rightEyePaint.setAlpha(127);
-        rightEyePaint.setAntiAlias(true);
+        this.leftEyePaint = new Paint();
+        this.leftEyePaint.setColor(Color.BLUE);
+        this.leftEyePaint.setAlpha(127);
+        this.leftEyePaint.setAntiAlias(true);
+        this.rightEyePaint = new Paint();
+        this.rightEyePaint.setColor(Color.RED);
+        this.rightEyePaint.setAlpha(127);
+        this.rightEyePaint.setAntiAlias(true);
 
-        leftEye = new DrawableEye();
-        rightEye = new DrawableEye();
+        this.leftEye = new DrawableEye();
+        this.rightEye = new DrawableEye();
     }
 
 
@@ -91,11 +91,11 @@ public class DrawView extends View {
         super.onDraw(canvas);
         canvas.drawColor(Color.WHITE);
 
-        if (leftEye != null && leftEye.isVisible()) {
-            canvas.drawCircle(leftEye.getPosition().x*this.getWidth(), (1-leftEye.getPosition().y) *this.getHeight(), leftEye.getPupilDiameter(), leftEyePaint);
+        if (this.leftEye != null && this.leftEye.isVisible()) {
+            canvas.drawCircle(this.leftEye.getPosition().x*this.getWidth(), (1-this.leftEye.getPosition().y) *this.getHeight(), this.leftEye.getPupilDiameter(), this.leftEyePaint);
         }
-        if(rightEye != null && rightEye.isVisible()) {
-            canvas.drawCircle(rightEye.getPosition().x *this.getWidth(), (1-rightEye.getPosition().y) * this.getHeight(), rightEye.getPupilDiameter(), rightEyePaint);
+        if(this.rightEye != null && this.rightEye.isVisible()) {
+            canvas.drawCircle(this.rightEye.getPosition().x *this.getWidth(), (1-this.rightEye.getPosition().y) * this.getHeight(), this.rightEye.getPupilDiameter(), this.rightEyePaint);
         }
 
 

@@ -12,8 +12,6 @@ import com.julia.Eyetracking.DataModel.EyetrackingDatabase;
 import com.julia.Eyetracking.Simulator.RandomSimulator;
 
 import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -41,12 +39,15 @@ public class InstrumentedTest {
         assertEquals("com.julia.Eyetracking", appContext.getPackageName());
     }
 
+    /**
+     * Test to ensure that the Room database implementation works.
+     */
     @Test
     public void roomPersistenceInsertAndDelete() {
         // Context of the app under test.
         Context appContext = InstrumentationRegistry.getTargetContext();
         assertEquals("com.julia.Eyetracking", appContext.getPackageName());
-        EyetrackingDatabase database = Room.databaseBuilder(appContext, EyetrackingDatabase.class, Constants.EyetrackingDatabase).fallbackToDestructiveMigration().build();
+        EyetrackingDatabase database = Room.databaseBuilder(appContext, EyetrackingDatabase.class, Constants.EYETRACKING_DATABASE).fallbackToDestructiveMigration().build();
         RandomSimulator simulator = new RandomSimulator();
         long timePrior = Instant.now().toEpochMilli();
         database.dbOperations().deleteAll();
@@ -72,7 +73,6 @@ public class InstrumentedTest {
      * Test to ensure flat buffer serial/deserial works
      *
      */
-
     @Test public void flatBufferTest()
     {
         RandomSimulator simulator = new RandomSimulator();

@@ -33,8 +33,8 @@ public class EyetrackingFlatBufferService extends BaseEyetrackingService{
     {
         Bundle bundle = new Bundle();
         ByteBuffer buf = data.toFlatBuffer();
-        bundle.putInt(Constants.ByteBufferPosition, buf.position());
-        bundle.putByteArray(Constants.EyetrackingDataBytes, buf.array());
+        bundle.putInt(Constants.BYTE_BUFFER_POSITION, buf.position());
+        bundle.putByteArray(Constants.EYETRACKING_DATA_BYTES, buf.array());
 
         ArrayList<Messenger> deadClients = new ArrayList<>();
 

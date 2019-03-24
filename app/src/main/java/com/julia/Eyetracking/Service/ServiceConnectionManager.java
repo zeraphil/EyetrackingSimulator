@@ -41,7 +41,7 @@ public class ServiceConnectionManager {
     /**
      * Answer to the "what to use for networked connection"
      */
-    private boolean doFlatBufferService = true;
+    private boolean doFlatBufferService = false;
 
     /**
      * Messenger/service connection pair for communicating with the eyetracking data stream service
@@ -138,13 +138,13 @@ public class ServiceConnectionManager {
         {         // Bind to the service
             try {
                 Log.d(this.getClass().toString(), EyetrackingMessengerService.class.toString());
-                if (!doFlatBufferService)
+                if (this.doFlatBufferService)
                 {
-                    currentActivity.bindService(new Intent(currentActivity, EyetrackingMessengerService.class), this.eyetrackingServiceConnection, Context.BIND_AUTO_CREATE);
+                    this.currentActivity.bindService(new Intent(currentActivity, EyetrackingFlatBufferService.class), this.eyetrackingServiceConnection, Context.BIND_AUTO_CREATE);
                 }
                 else
                 {
-                    currentActivity.bindService(new Intent(currentActivity, EyetrackingFlatBufferService.class), this.eyetrackingServiceConnection, Context.BIND_AUTO_CREATE);
+                    this.currentActivity.bindService(new Intent(currentActivity, EyetrackingMessengerService.class), this.eyetrackingServiceConnection, Context.BIND_AUTO_CREATE);
                 }
 
                 if(this.storeToDatabase)
@@ -153,7 +153,7 @@ public class ServiceConnectionManager {
                     this.storeToDatabase = true;
                 }
 
-                servicesAreBound = true;
+                this.servicesAreBound = true;
 
             }
             catch (Exception e) {
@@ -174,7 +174,7 @@ public class ServiceConnectionManager {
                 this.currentActivity.unbindService(this.databaseServiceConnection);
             }
             this.currentActivity.unbindService(this.eyetrackingServiceConnection);
-            servicesAreBound = false;
+            this.servicesAreBound = false;
         }
     }
 
@@ -188,20 +188,20 @@ public class ServiceConnectionManager {
 
         switch (message.what) {
             case EyetrackingServiceMessages.PARCEL_DATA:
-            EyetrackingData data = message.getData().getParcelable(Constants.EyetrackingDataParcel);
+            EyetrackingData data = message.getData().getParcelable(Constants.EYETRACKING_DATA_PARCEL);
             if(data != null) {
-                if (listener != null) {
+                if (this.listener != null) {
                     this.listener.onEyetrackingDataMessage(data);
                 }
             }
             break;
             case EyetrackingServiceMessages.FLATBUFFER_DATA:
-                ByteBuffer buffer = ByteBuffer.wrap(message.getData().getByteArray(Constants.EyetrackingDataBytes));
-                buffer.position(message.getData().getInt(Constants.ByteBufferPosition));
+                ByteBuffer buffer = ByteBuffer.wrap(message.getData().getByteArray(Constants.EYETRACKING_DATA_BYTES));
+                buffer.position(message.getData().getInt(Constants.BYTE_BUFFER_POSITION));
                 try {
                     data = new EyetrackingData(buffer);
                     if (data != null) {
-                        if (listener != null) {
+                        if (this.listener != null) {
                             this.listener.onEyetrackingDataMessage(data);
                         }
                     }
@@ -252,7 +252,7 @@ public class ServiceConnectionManager {
      * getter/setters
      */
     public Activity getCurrentActivity() {
-        return currentActivity;
+        return this.currentActivity;
     }
 
     public void setCurrentActivity(Activity currentActivity) {
@@ -260,11 +260,11 @@ public class ServiceConnectionManager {
     }
 
     public boolean areServicesBound() {
-        return servicesAreBound;
+        return this.servicesAreBound;
     }
 
     public IEyetrackingDataListener getListener() {
-        return listener;
+        return this.listener;
     }
 
     public void setListener(IEyetrackingDataListener listener) {

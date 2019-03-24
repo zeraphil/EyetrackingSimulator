@@ -35,7 +35,7 @@ public class EyetrackingMessengerService extends BaseEyetrackingService {
     public void sendData(EyetrackingData data)
     {
         Bundle bundle = new Bundle();
-        bundle.putParcelable(Constants.EyetrackingDataParcel, data);
+        bundle.putParcelable(Constants.EYETRACKING_DATA_PARCEL, data);
 
         ArrayList<Messenger> deadClients = new ArrayList<>();
 

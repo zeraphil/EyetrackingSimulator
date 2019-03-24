@@ -157,7 +157,7 @@ public class BaseEyetrackingService extends Service {
      */
     protected class IncomingMessageHandler extends Handler {
 
-        public IncomingMessageHandler(Looper looper)
+        protected IncomingMessageHandler(Looper looper)
         {
             super(looper);
         }

@@ -80,19 +80,17 @@ public class DatabaseRoomService extends Service {
         try {
             switch (message.what) {
                 case EyetrackingServiceMessages.PARCEL_DATA:
-                    EyetrackingData data = message.getData().getParcelable(Constants.EyetrackingDataParcel);
+                    EyetrackingData data = message.getData().getParcelable(Constants.EYETRACKING_DATA_PARCEL);
                     if (data != null) {
                         this.serializableDataQueue.put(data.toSerializable());
                     }
                     break;
                 case EyetrackingServiceMessages.FLATBUFFER_DATA:
-                    ByteBuffer buffer = ByteBuffer.wrap(message.getData().getByteArray(Constants.EyetrackingDataBytes));
-                    buffer.position(message.getData().getInt(Constants.ByteBufferPosition));
-
+                    ByteBuffer buffer = ByteBuffer.wrap(message.getData().getByteArray(Constants.EYETRACKING_DATA_BYTES));
+                    buffer.position(message.getData().getInt(Constants.BYTE_BUFFER_POSITION));
                     data = new EyetrackingData(buffer);
-                    if (data != null) {
-                        this.serializableDataQueue.put(data.toSerializable());
-                    }
+                    this.serializableDataQueue.put(data.toSerializable());
+
                     break;
             }
         }
@@ -127,7 +125,7 @@ public class DatabaseRoomService extends Service {
 
     @Override
     public IBinder onBind(Intent intent) {
-        this.database = Room.databaseBuilder(this.getApplicationContext(), EyetrackingDatabase.class, Constants.EyetrackingDatabase).fallbackToDestructiveMigration().build();
+        this.database = Room.databaseBuilder(this.getApplicationContext(), EyetrackingDatabase.class, Constants.EYETRACKING_DATABASE).fallbackToDestructiveMigration().build();
         this.handlerThread.start();
         this.incomingMessenger = new Messenger(new DatabaseRoomService.IncomingMessageHandler(this.handlerThread.getLooper()));
         return this.incomingMessenger.getBinder();
