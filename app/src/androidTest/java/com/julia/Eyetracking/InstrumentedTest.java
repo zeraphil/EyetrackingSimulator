@@ -7,11 +7,10 @@ import android.support.test.runner.AndroidJUnit4;
 import android.util.Log;
 
 import com.julia.Eyetracking.DataModel.EyetrackingData;
-import com.julia.Eyetracking.DataModel.EyetrackingDataSerializable;
+import com.julia.Eyetracking.DataModel.SerializableEyetrackingData;
 import com.julia.Eyetracking.DataModel.EyetrackingDatabase;
 import com.julia.Eyetracking.Simulator.RandomSimulator;
 
-import org.hamcrest.core.Is;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -32,19 +31,6 @@ public class InstrumentedTest {
 
     public static final int iterations = 1000;
 
-    @Before
-    public void deleteData()
-    {
-        // Context of the app under test.
-        Context appContext = InstrumentationRegistry.getTargetContext();
-
-        assertEquals("com.julia.Eyetracking", appContext.getPackageName());
-
-
-        EyetrackingDatabase database = Room.databaseBuilder(appContext, EyetrackingDatabase.class, Constants.EyetrackingDatabase).fallbackToDestructiveMigration().build();
-        database.dbOperations().deleteAll();
-    }
-
     @Test
     public void useAppContext() {
         // Context of the app under test.
@@ -54,13 +40,15 @@ public class InstrumentedTest {
     }
 
     @Test
-    public void roomPersistenceInsert() {
+    public void roomPersistenceInsertAndDelete() {
         // Context of the app under test.
         Context appContext = InstrumentationRegistry.getTargetContext();
         assertEquals("com.julia.Eyetracking", appContext.getPackageName());
         EyetrackingDatabase database = Room.databaseBuilder(appContext, EyetrackingDatabase.class, Constants.EyetrackingDatabase).fallbackToDestructiveMigration().build();
         RandomSimulator simulator = new RandomSimulator();
         long timePrior = Instant.now().toEpochMilli();
+        database.dbOperations().deleteAll();
+
         for(int i = 0; i < iterations; i++)
         {
             EyetrackingData data = simulator.update(1);
@@ -68,22 +56,14 @@ public class InstrumentedTest {
         }
         Log.d(this.getClass().toString(), "Time completed: " + (Instant.now().toEpochMilli() - timePrior));
 
-        List<EyetrackingDataSerializable> all = database.dbOperations().getAll();
+        List<SerializableEyetrackingData> all = database.dbOperations().getAll();
         Log.d(this.getClass().toString(), "Count of all entries " + all.size());
 
         //did we put in the expected amount of objects, succesfully
         Assert.assertEquals(all.size(), iterations);
 
-    }
-    @Test
-    public void roomPersistenceRead() {
-        Context appContext = InstrumentationRegistry.getTargetContext();
-
-        assertEquals("com.julia.Eyetracking", appContext.getPackageName());
-
-        EyetrackingDatabase database = Room.databaseBuilder(appContext, EyetrackingDatabase.class, Constants.EyetrackingDatabase).fallbackToDestructiveMigration().build();
-        List<EyetrackingDataSerializable> all = database.dbOperations().getAll();
-        Assert.assertEquals(all.size(), iterations);
+        database.dbOperations().deleteAll();
+        //Assert.assertEquals(all.size(), 0);
 
     }
 

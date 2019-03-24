@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <com.julia.Eyetracking.DrawView
+    <com.julia.Eyetracking.UI.DrawView
         android:id="@+id/view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"

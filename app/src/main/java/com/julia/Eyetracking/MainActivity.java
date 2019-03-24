@@ -19,12 +19,13 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import com.julia.Eyetracking.DataModel.EyetrackingData;
-import com.julia.Eyetracking.DataModel.EyetrackingDataSerializable;
+import com.julia.Eyetracking.DataModel.SerializableEyetrackingData;
 import com.julia.Eyetracking.DataModel.EyetrackingDatabase;
 import com.julia.Eyetracking.DataModel.InsertEyetrackingToDatabaseTask;
 import com.julia.Eyetracking.DataModel.ReportDatabaseEntriesTask;
 import com.julia.Eyetracking.Service.MessengerEyetrackingService;
 import com.julia.Eyetracking.Service.EyetrackingServiceMessages;
+import com.julia.Eyetracking.UI.DrawView;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -46,13 +47,12 @@ public class MainActivity extends AppCompatActivity {
      */
     private EyetrackingDatabase database;
     private static final int serializationItemThreshold = 100;
-    private LinkedBlockingQueue<EyetrackingDataSerializable> serializableDataQueue = new LinkedBlockingQueue<>();
+    private LinkedBlockingQueue<SerializableEyetrackingData> serializableDataQueue = new LinkedBlockingQueue<>();
 
     DrawView drawView;
     TextView textView;
     //Incoming message handler, mainly to handle data messages
     private class IncomingMessageHandler extends Handler {
-
         @Override
         public void handleMessage(Message msg) {
             //Log.d(this.getClass().toString(), "Handle message called.");
@@ -69,7 +69,7 @@ public class MainActivity extends AppCompatActivity {
     private ServiceConnection connection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
-            Log.d("MainActivity", "Connected to service");
+            Log.d(this.getClass().toString(), "Connected to service");
             isBound = true;
             serviceMessenger = new Messenger(service);
             registerToService();
@@ -88,7 +88,7 @@ public class MainActivity extends AppCompatActivity {
      */
     public void bindServiceToggle(View view)
     {
-        Log.d("MainActivity", "Toggle button called" + isBound);
+        Log.d(this.getClass().toString(), "Toggle button called" + isBound);
         bindService(!isBound);
         Button toggle = (Button)findViewById(R.id.button);
         if (isBound)
@@ -158,7 +158,7 @@ public class MainActivity extends AppCompatActivity {
             textView.setText(String.format("Latency: %2f ms", averageLatency));
         }
 
-        Log.d(this.getClass().toString(), data.getTimestamp().toString());
+        //Log.d(this.getClass().toString(), data.getTimestamp().toString());
         //set the current time to last
         lastTimestamp = Instant.now().toEpochMilli();
     }
@@ -171,10 +171,10 @@ public class MainActivity extends AppCompatActivity {
     {
         Log.d(this.getClass().toString(), "Dumping Queue To database");
 
-        ArrayList<EyetrackingDataSerializable> dataList = new ArrayList<>();
+        ArrayList<SerializableEyetrackingData> dataList = new ArrayList<>();
         serializableDataQueue.drainTo(dataList);
         InsertEyetrackingToDatabaseTask task = new InsertEyetrackingToDatabaseTask(this.database);
-        EyetrackingDataSerializable[] array = new EyetrackingDataSerializable[dataList.size()];
+        SerializableEyetrackingData[] array = new SerializableEyetrackingData[dataList.size()];
         array = dataList.toArray(array);
         task.execute(array);
     }
@@ -188,14 +188,14 @@ public class MainActivity extends AppCompatActivity {
         if(bind)
         {         // Bind to the service
             try {
-                Log.d("MainActivity", MessengerEyetrackingService.class.toString());
+                Log.d(this.getClass().toString(), MessengerEyetrackingService.class.toString());
 
                 bindService(new Intent(this, MessengerEyetrackingService.class), this.connection, Context.BIND_AUTO_CREATE);
                 isBound = true;
             }
             catch (Exception e) {
 
-                Log.e("MainActivity",Log.getStackTraceString(e));
+                Log.e(this.getClass().toString(),Log.getStackTraceString(e));
             }
         }
         else
@@ -216,7 +216,7 @@ public class MainActivity extends AppCompatActivity {
         Message msg = Message.obtain(null, EyetrackingServiceMessages.REGISTER, 0, 0);
         msg.replyTo = replyToMessenger;
         try {
-            Log.d("MainActivity", "Registering to service");
+            Log.d(this.getClass().toString(), "Registering to service");
             serviceMessenger.send(msg);
         } catch (RemoteException e) {
 
@@ -236,7 +236,7 @@ public class MainActivity extends AppCompatActivity {
         try {
             serviceMessenger.send(msg);
         } catch (RemoteException e) {
-            Log.e("MainActivity",Log.getStackTraceString(e));
+            Log.e(this.getClass().toString(),Log.getStackTraceString(e));
         }
 
         if (serializableDataQueue.size() > 0 )

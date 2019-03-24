@@ -23,9 +23,9 @@ public class EyetrackingData implements Parcelable {
         this.uniqueID = UUID.randomUUID().toString();
     }
 
-    public EyetrackingDataSerializable toSerializable()
+    public SerializableEyetrackingData toSerializable()
     {
-        EyetrackingDataSerializable entity = new EyetrackingDataSerializable();
+        SerializableEyetrackingData entity = new SerializableEyetrackingData();
         entity.setUniqueID(this.uniqueID);
         entity.setConfidence(this.confidence);
         entity.setId(this.id);
@@ -37,6 +37,10 @@ public class EyetrackingData implements Parcelable {
 
         return entity;
     }
+
+    /**
+     * Getter/setter
+     */
 
     public Timestamp getTimestamp() {
         return timestamp;

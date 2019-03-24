@@ -1,4 +1,4 @@
-package com.julia.Eyetracking;
+package com.julia.Eyetracking.UI;
 
 import android.content.Context;
 import android.graphics.Canvas;
@@ -7,7 +7,6 @@ import android.graphics.Paint;
 import android.graphics.PointF;
 import android.util.AttributeSet;
 import android.view.View;
-
 
 /**
  * Custom view class to visually represent eye tracking data on the background view of the app

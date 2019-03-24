@@ -29,7 +29,6 @@ public class MessengerEyetrackingService extends BaseEyetrackingService {
     {
         super();
         this.clientMessengers = new ArrayList<>();
-
     }
 
     /**

@@ -8,10 +8,10 @@ import java.io.Serializable;
 
 /**
  * Class that decomposes the message to parameters that the Android Room implementation can understand,
- * Mainly the special Timestamp class, which cannot be data converted...
+ * the special Timestamp class cannot be data converted...
  */
 @Entity
-public class EyetrackingDataSerializable implements Serializable {
+public class SerializableEyetrackingData implements Serializable {
     @PrimaryKey
     @NonNull
     private String uniqueID;

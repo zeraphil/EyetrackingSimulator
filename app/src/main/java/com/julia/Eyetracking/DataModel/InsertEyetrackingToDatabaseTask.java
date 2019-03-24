@@ -6,7 +6,7 @@ import android.util.Log;
 /**
  * Async class to batch process a queue of messages.
  */
-public class InsertEyetrackingToDatabaseTask extends AsyncTask<EyetrackingDataSerializable, Void, Void> {
+public class InsertEyetrackingToDatabaseTask extends AsyncTask<SerializableEyetrackingData, Void, Void> {
 
     private EyetrackingDatabase database;
 
@@ -16,7 +16,7 @@ public class InsertEyetrackingToDatabaseTask extends AsyncTask<EyetrackingDataSe
     }
 
     @Override
-    protected Void doInBackground(EyetrackingDataSerializable... eyetrackingData) {
+    protected Void doInBackground(SerializableEyetrackingData... eyetrackingData) {
         this.database.dbOperations().insertBatchEyetrackingData(eyetrackingData);
         Log.d(this.getClass().toString(), String.format("Database size = %d data entries", this.database.dbOperations().getAll().size()));
 

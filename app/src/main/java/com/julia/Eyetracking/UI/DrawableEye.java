@@ -1,4 +1,4 @@
-package com.julia.Eyetracking;
+package com.julia.Eyetracking.UI;
 
 import android.graphics.Point;
 import android.graphics.PointF;

@@ -63,7 +63,6 @@ public class EyeballSimulator implements ISimulator {
         {
             fixationTime -= deltaTime;
         }
-
         //update eye positions based on deltaTime
         doEyeMovement(deltaTime);
 
@@ -77,7 +76,6 @@ public class EyeballSimulator implements ISimulator {
         {
             currentEyePosition = currentRightEyePosition;
         }
-
 
         EyetrackingData data = new EyetrackingData();
         data.setTimestamp(Timestamp.now());

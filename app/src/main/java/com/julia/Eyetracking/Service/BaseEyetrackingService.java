@@ -35,7 +35,6 @@ public class BaseEyetrackingService extends Service {
     protected SimulatorType simulatorType;
     protected ISimulator simulator;
 
-
     /**
      * The Service thread that will run our simulation and send messages
      */
@@ -105,6 +104,7 @@ public class BaseEyetrackingService extends Service {
      */
     protected void onRegisterMessage(Message msg)
     {
+        Log.d(this.getClass().toString(), "Registering client");
     }
 
     /**
@@ -113,6 +113,7 @@ public class BaseEyetrackingService extends Service {
      */
     protected void onUnregisterMessage(Message msg)
     {
+        Log.d(this.getClass().toString(), "Unregistering client");
     }
 
     /**
@@ -140,7 +141,7 @@ public class BaseEyetrackingService extends Service {
     /**
      * Handle the register/unregister messages
      */
-    public class IncomingMessageHandler extends Handler {
+    protected class IncomingMessageHandler extends Handler {
 
         @Override
         public void handleMessage(Message msg) {
@@ -149,7 +150,6 @@ public class BaseEyetrackingService extends Service {
             switch (msg.what) {
                 case EyetrackingServiceMessages.REGISTER:
                     onRegisterMessage(msg);
-                    Log.d(this.getClass().toString(), "Registering client");
                     break;
                 case EyetrackingServiceMessages.UNREGISTER:
                     onUnregisterMessage(msg);
