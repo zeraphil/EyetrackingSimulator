@@ -8,6 +8,7 @@ import android.util.Log;
 import com.julia.Eyetracking.Constants;
 import com.julia.Eyetracking.DataModel.EyetrackingData;
 
+import java.time.Instant;
 import java.util.ArrayList;
 
 /**
@@ -36,6 +37,7 @@ public class EyetrackingMessengerService extends BaseEyetrackingService {
     {
         Bundle bundle = new Bundle();
         bundle.putParcelable(Constants.EYETRACKING_DATA_PARCEL, data);
+        bundle.putLong(Constants.IPC_TIMESTAMP, Instant.now().toEpochMilli());
 
         ArrayList<Messenger> deadClients = new ArrayList<>();
 

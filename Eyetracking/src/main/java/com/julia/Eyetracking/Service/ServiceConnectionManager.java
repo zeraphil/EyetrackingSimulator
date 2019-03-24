@@ -17,6 +17,8 @@ import com.julia.Eyetracking.DataModel.EyetrackingData;
 
 import java.lang.ref.WeakReference;
 import java.nio.ByteBuffer;
+import java.time.Instant;
+import java.util.Locale;
 
 
 /**
@@ -186,6 +188,11 @@ public class ServiceConnectionManager {
      */
     public void onNewDataMessage(Message message) {
         //Get the data from the message parcel
+        //should have the timestamp in
+
+        long timestamp = message.getData().getLong(Constants.IPC_TIMESTAMP);
+        long diff =Instant.now().toEpochMilli() - timestamp;
+        Log.d(this.getClass().toString(), String.format(Locale.US,"Serialization and IPC took %d milliseconds", diff ));
 
         switch (message.what) {
             case EyetrackingServiceMessages.PARCEL_DATA:

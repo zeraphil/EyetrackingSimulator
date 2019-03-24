@@ -9,6 +9,7 @@ import com.julia.Eyetracking.Constants;
 import com.julia.Eyetracking.DataModel.EyetrackingData;
 
 import java.nio.ByteBuffer;
+import java.time.Instant;
 import java.util.ArrayList;
 
 public class EyetrackingFlatBufferService extends BaseEyetrackingService{
@@ -33,6 +34,7 @@ public class EyetrackingFlatBufferService extends BaseEyetrackingService{
     {
         Bundle bundle = new Bundle();
         ByteBuffer buf = data.toFlatBuffer();
+        bundle.putLong(Constants.IPC_TIMESTAMP, Instant.now().toEpochMilli());
         bundle.putInt(Constants.BYTE_BUFFER_POSITION, buf.position());
         bundle.putByteArray(Constants.EYETRACKING_DATA_BYTES, buf.array());
 
