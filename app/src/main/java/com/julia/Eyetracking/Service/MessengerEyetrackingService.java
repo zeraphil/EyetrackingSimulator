@@ -44,6 +44,8 @@ public class MessengerEyetrackingService extends BaseEyetrackingService {
         Message message = Message.obtain(null, EyetrackingServiceMessages.DATA, 0 , 0);
         message.setData(bundle);
 
+        ArrayList<Messenger> deadClients = new ArrayList<>();
+
         for(Messenger m : this.clientMessengers)
         {
             try {
@@ -53,9 +55,11 @@ public class MessengerEyetrackingService extends BaseEyetrackingService {
             {
                 Log.e(this.getClass().toString(), Log.getStackTraceString(e));
                 //this client is probably dead, mark to remove
-
+                deadClients.add(m);
             }
         }
+
+        removeDeadClients(deadClients);
     }
 
     /**
@@ -85,6 +89,22 @@ public class MessengerEyetrackingService extends BaseEyetrackingService {
         {
             Log.d(this.getClass().toString(), "No clients, stopping simulation");
             stopSimulation();
+        }
+    }
+
+    /**
+     * If any client has raised a RemoteException, remove them from the list
+     * @param deadClients
+     */
+    private void removeDeadClients(ArrayList<Messenger> deadClients)
+    {
+
+        if(deadClients.size() > 0)
+        {
+            for (Messenger m : deadClients)
+            {
+                this.clientMessengers.remove(m);
+            }
         }
     }
 

@@ -14,7 +14,6 @@ import com.julia.Eyetracking.Simulator.ISimulator;
 import com.julia.Eyetracking.Simulator.RandomSimulator;
 import com.julia.Eyetracking.Simulator.SimulatorType;
 
-import java.util.ArrayList;
 
 /**
  * Class that defines the simulation paradigm, variables, and methods of the service,
