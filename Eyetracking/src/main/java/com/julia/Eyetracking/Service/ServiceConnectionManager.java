@@ -18,7 +18,6 @@ import com.julia.Eyetracking.DataModel.EyetrackingData;
 import java.lang.ref.WeakReference;
 import java.nio.ByteBuffer;
 import java.time.Instant;
-import java.util.Locale;
 
 
 /**
@@ -34,6 +33,8 @@ public class ServiceConnectionManager {
      * Bool that returns whether one or more services are bound
      */
     private boolean servicesAreBound;
+    private boolean eyetrackingServiceBound;
+    private boolean databaseServiceBound;
 
     /**
      * Flag to invoke the database service connection when binding
@@ -56,6 +57,8 @@ public class ServiceConnectionManager {
             eyetrackingServiceMessenger = new Messenger(service);
             //send a message to the eyetracking service, passing the local incoming handler as a reply to
             sendRegisterMessage(eyetrackingServiceMessenger, incomingMessenger);
+            eyetrackingServiceBound = true;
+            areAllServicesConnected();
         }
 
         @Override
@@ -75,10 +78,8 @@ public class ServiceConnectionManager {
             databaseServiceMessenger = new Messenger(service);
             //send a register message to the database service, passing the local incoming handler as a reply to
             sendRegisterMessage(databaseServiceMessenger, incomingMessenger);
-            if(eyetrackingServiceMessenger!= null)
-            {
-                sendRegisterMessage(eyetrackingServiceMessenger, databaseServiceMessenger);
-            }
+            databaseServiceBound = true;
+            areAllServicesConnected();
         }
 
         @Override
@@ -86,6 +87,21 @@ public class ServiceConnectionManager {
             databaseServiceMessenger = null;
         }
     };
+
+    /**
+     * Method to handle when all services are connected
+     */
+    private boolean areAllServicesConnected()
+    {
+        if (eyetrackingServiceBound && databaseServiceBound)
+        {
+            //register the database service and eyetracking services so database service can
+            //recieve eyetracking data directly
+            sendRegisterMessage(this.eyetrackingServiceMessenger, this.databaseServiceMessenger);
+            return true;
+        }
+        return false;
+    }
 
 
     //Messenger that establishes the incoming connection
@@ -178,6 +194,8 @@ public class ServiceConnectionManager {
             }
             this.currentActivity.unbindService(this.eyetrackingServiceConnection);
             this.servicesAreBound = false;
+            this.databaseServiceBound = false;
+            this.eyetrackingServiceBound = false;
         }
     }
 
@@ -267,8 +285,12 @@ public class ServiceConnectionManager {
         this.currentActivity = currentActivity;
     }
 
+    /**
+     * Check if any service is bound already
+     * @return
+     */
     public boolean areServicesBound() {
-        return this.servicesAreBound;
+        return this.databaseServiceBound || this.eyetrackingServiceBound;
     }
 
     public IEyetrackingDataListener getListener() {
