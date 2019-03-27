@@ -12,7 +12,7 @@ import java.nio.ByteBuffer;
 import java.time.Instant;
 import java.util.ArrayList;
 
-public class EyetrackingFlatBufferService extends BaseEyetrackingService{
+public class EyetrackingFlatBufferService extends EyetrackingSimulationService {
 
     /**
      * Target we publish for clients to send messages to IncomingMessageHandler.

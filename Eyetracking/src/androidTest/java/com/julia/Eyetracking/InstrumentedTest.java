@@ -6,9 +6,8 @@ import android.support.test.InstrumentationRegistry;
 import android.support.test.runner.AndroidJUnit4;
 import android.util.Log;
 
-import com.julia.Eyetracking.Constants;
 import com.julia.Eyetracking.DataModel.EyetrackingData;
-import com.julia.Eyetracking.DataModel.SerializableEyetrackingData;
+import com.julia.Eyetracking.DataModel.EyetrackingDatabaseEntity;
 import com.julia.Eyetracking.DataModel.EyetrackingDatabase;
 import com.julia.Eyetracking.Simulator.RandomSimulator;
 
@@ -37,7 +36,6 @@ public class InstrumentedTest {
         // Context of the app under test.
         Context appContext = InstrumentationRegistry.getTargetContext();
 
-        assertEquals("com.julia.Eyetracking", appContext.getPackageName());
     }
 
     /**
@@ -47,7 +45,6 @@ public class InstrumentedTest {
     public void roomPersistenceInsertAndDelete() {
         // Context of the app under test.
         Context appContext = InstrumentationRegistry.getTargetContext();
-        assertEquals("com.julia.Eyetracking", appContext.getPackageName());
         EyetrackingDatabase database = Room.databaseBuilder(appContext, EyetrackingDatabase.class, Constants.EYETRACKING_DATABASE).fallbackToDestructiveMigration().build();
         RandomSimulator simulator = new RandomSimulator();
         long timePrior = Instant.now().toEpochMilli();
@@ -56,11 +53,11 @@ public class InstrumentedTest {
         for(int i = 0; i < iterations; i++)
         {
             EyetrackingData data = simulator.update(1);
-            database.dbOperations().insertEyetrackingData(data.toSerializable());
+            database.dbOperations().insertEyetrackingData(data.toDatabaseEntity());
         }
         Log.d(this.getClass().toString(), "Time completed: " + (Instant.now().toEpochMilli() - timePrior));
 
-        List<SerializableEyetrackingData> all = database.dbOperations().getAll();
+        List<EyetrackingDatabaseEntity> all = database.dbOperations().getAll();
         Log.d(this.getClass().toString(), "Count of all entries " + all.size());
 
         //did we put in the expected amount of objects, succesfully
@@ -83,11 +80,13 @@ public class InstrumentedTest {
         {
             EyetrackingData data = simulator.update(1);
             ByteBuffer buf = data.toFlatBuffer();
+            int position = buf.position();
             byte[] arr = buf.array();
 
             ByteBuffer bff = ByteBuffer.wrap(arr);
+            bff.position(position);
             //test it immediately
-            EyetrackingData fbData = new EyetrackingData(bff);
+            EyetrackingData fbData = EyetrackingData.fromFlatBuffer(bff);
             //did we deserialize correctly
            // Log.d("test", data.getUniqueID());
            // Log.d("test", fbData.getUniqueID());

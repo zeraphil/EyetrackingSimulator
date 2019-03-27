@@ -21,7 +21,7 @@ import com.julia.Eyetracking.Simulator.SimulatorType;
  * Class that defines the simulation paradigm, variables, and methods of the service,
  * but only puts messages into log
  */
-public class BaseEyetrackingService extends Service {
+public class EyetrackingSimulationService extends Service {
 
     /**
      * Target we publish for clients to send messages to IncomingMessageHandler.
@@ -63,7 +63,7 @@ public class BaseEyetrackingService extends Service {
         }
     };
 
-    public BaseEyetrackingService()
+    public EyetrackingSimulationService()
     {
         this.simulatorType = SimulatorType.EYEBALL;
         setSimulatorType(simulatorType);

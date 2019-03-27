@@ -17,10 +17,11 @@ import java.util.Random;
  */
 public class EyeballSimulator implements ISimulator {
 
-    Random random = new Random();
-    private final static long MaximumFixationTime = 3000;
+    private Random random = new Random();
+    //simulator internals
+    private final static long MaximumFixationTime = 1000; //1 second in milliseconds
     private final static float SaccadeSpeed = 15; //15 radians per second
-    private final static float MaximumPupilDiameter = 60;
+    private final static float MaximumPupilDiameter = 60; //in pixels
     private final static double TargetDistanceThreshold = .05;
     //simulator internals
     private PointF fixationTarget = new PointF();

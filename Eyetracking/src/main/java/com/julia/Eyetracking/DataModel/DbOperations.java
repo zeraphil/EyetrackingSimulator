@@ -8,22 +8,22 @@ import android.arch.persistence.room.Update;
 import java.util.List;
 
 /**
- * Interface to handle the Android Room CRUD operations. Currently just insert/get
+ * Interface to handle the Android Room CRUD operations. Currently just insert/query
  */
 @Dao
 public interface DbOperations {
     @Insert
-    void insertEyetrackingData(SerializableEyetrackingData data);
+    void insertEyetrackingData(EyetrackingDatabaseEntity data);
     @Insert
-    void insertBatchEyetrackingData(List<SerializableEyetrackingData> dataList);
+    void insertBatchEyetrackingData(List<EyetrackingDatabaseEntity> dataList);
     @Insert
-    void insertBatchEyetrackingData(SerializableEyetrackingData[] dataList);
+    void insertBatchEyetrackingData(EyetrackingDatabaseEntity[] dataList);
     @Update
-    void updataEyetrackingData(SerializableEyetrackingData data);
-    @Query ("SELECT * From SerializableEyetrackingData WHERE seconds < :seconds")
-    List<SerializableEyetrackingData> getDataBeforeTime(long seconds);
-    @Query("SELECT * FROM SerializableEyetrackingData")
-    List<SerializableEyetrackingData> getAll();
-    @Query ("DELETE FROM SerializableEyetrackingData")
+    void updataEyetrackingData(EyetrackingDatabaseEntity data);
+    @Query ("SELECT * From EyetrackingDatabaseEntity WHERE seconds < :seconds")
+    List<EyetrackingDatabaseEntity> getDataBeforeTime(long seconds);
+    @Query("SELECT * FROM EyetrackingDatabaseEntity")
+    List<EyetrackingDatabaseEntity> getAll();
+    @Query ("DELETE FROM EyetrackingDatabaseEntity")
     void deleteAll();
 }

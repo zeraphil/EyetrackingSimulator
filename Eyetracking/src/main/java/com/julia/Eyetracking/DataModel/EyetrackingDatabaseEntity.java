@@ -11,7 +11,7 @@ import java.io.Serializable;
  * the special Timestamp class cannot be data converted...
  */
 @Entity
-public class SerializableEyetrackingData implements Serializable {
+public class EyetrackingDatabaseEntity implements Serializable {
     @PrimaryKey
     @NonNull
     private String uniqueID;

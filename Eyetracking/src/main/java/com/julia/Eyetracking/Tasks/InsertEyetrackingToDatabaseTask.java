@@ -4,12 +4,12 @@ import android.os.AsyncTask;
 import android.util.Log;
 
 import com.julia.Eyetracking.DataModel.EyetrackingDatabase;
-import com.julia.Eyetracking.DataModel.SerializableEyetrackingData;
+import com.julia.Eyetracking.DataModel.EyetrackingDatabaseEntity;
 
 /**
  * Async class to batch process a queue of messages.
  */
-public class InsertEyetrackingToDatabaseTask extends AsyncTask<SerializableEyetrackingData, Void, Void> {
+public class InsertEyetrackingToDatabaseTask extends AsyncTask<EyetrackingDatabaseEntity, Void, Void> {
 
     private EyetrackingDatabase database;
 
@@ -19,7 +19,7 @@ public class InsertEyetrackingToDatabaseTask extends AsyncTask<SerializableEyetr
     }
 
     @Override
-    protected Void doInBackground(SerializableEyetrackingData... eyetrackingData) {
+    protected Void doInBackground(EyetrackingDatabaseEntity... eyetrackingData) {
         this.database.dbOperations().insertBatchEyetrackingData(eyetrackingData);
         Log.d(this.getClass().toString(), String.format("Database size = %d data entries", this.database.dbOperations().getAll().size()));
 

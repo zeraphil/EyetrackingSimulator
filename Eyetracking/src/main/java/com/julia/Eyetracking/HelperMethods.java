@@ -26,7 +26,7 @@ public class HelperMethods {
     }
 
     /**
-     * Method to help calculate a smoothed average for latency
+     * Method to help calculate a smoothed average
      * @param currentAverage
      * @param newValue
      * @param smoothing

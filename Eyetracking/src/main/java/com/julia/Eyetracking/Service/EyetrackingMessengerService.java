@@ -15,7 +15,7 @@ import java.util.ArrayList;
  * Service that uses the binder framework for IPC
  * Override the sendData/register/unregister methods from the base service model
  */
-public class EyetrackingMessengerService extends BaseEyetrackingService {
+public class EyetrackingMessengerService extends EyetrackingSimulationService {
 
     /**
      * Target we publish for clients to send messages to IncomingMessageHandler.

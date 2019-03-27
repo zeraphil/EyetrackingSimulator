@@ -1,0 +1,20 @@
+
+namespace com.julia.Eyetracking.FlatBufferSchema;
+
+table Message{
+    UniqueId : string;
+    ID : bool;
+    Timestamp : Timestamp;
+    Confidence : float;
+    NormalizedPosX : float;
+    NormalizedPosY : float;
+    PupilDiameter : int;
+}
+
+struct Timestamp
+{
+    seconds : long;
+    nanoseconds : int;
+}
+
+root_type Message;

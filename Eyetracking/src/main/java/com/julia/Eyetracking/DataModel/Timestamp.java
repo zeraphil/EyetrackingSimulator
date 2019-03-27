@@ -7,7 +7,7 @@ import java.time.Instant;
 import java.util.Locale;
 
 /**
- * Parcelable Timestamp class
+ * Parcelable Timestamp class adapter to preserve the Eyetracking data parcel schema
  */
 public class Timestamp implements Parcelable {
 

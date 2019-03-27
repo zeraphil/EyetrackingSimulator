@@ -88,7 +88,7 @@ public class ServiceConnectionManager {
     };
 
 
-    //handles incoming messenges from services
+    //Messenger that establishes the incoming connection
     private Messenger incomingMessenger = new Messenger(new IncomingMessageHandler(new WeakReference<>(this)));
 
     private IEyetrackingDataListener listener;
@@ -192,7 +192,7 @@ public class ServiceConnectionManager {
 
         long timestamp = message.getData().getLong(Constants.IPC_TIMESTAMP);
         long diff =Instant.now().toEpochMilli() - timestamp;
-        Log.d(this.getClass().toString(), String.format(Locale.US,"Serialization and IPC took %d milliseconds", diff ));
+        //Log.d(this.getClass().toString(), String.format(Locale.US,"Serialization and IPC took %d milliseconds", diff ));
 
         switch (message.what) {
             case EyetrackingServiceMessages.PARCEL_DATA:
@@ -207,7 +207,7 @@ public class ServiceConnectionManager {
                 ByteBuffer buffer = ByteBuffer.wrap(message.getData().getByteArray(Constants.EYETRACKING_DATA_BYTES));
                 buffer.position(message.getData().getInt(Constants.BYTE_BUFFER_POSITION));
                 try {
-                    data = new EyetrackingData(buffer);
+                    data = EyetrackingData.fromFlatBuffer(buffer);
                     if (data != null) {
                         if (this.listener != null) {
                             this.listener.onEyetrackingDataMessage(data);

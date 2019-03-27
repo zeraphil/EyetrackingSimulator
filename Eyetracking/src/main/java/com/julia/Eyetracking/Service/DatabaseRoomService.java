@@ -15,7 +15,7 @@ import android.util.Log;
 import com.julia.Eyetracking.Constants;
 import com.julia.Eyetracking.DataModel.EyetrackingData;
 import com.julia.Eyetracking.DataModel.EyetrackingDatabase;
-import com.julia.Eyetracking.DataModel.SerializableEyetrackingData;
+import com.julia.Eyetracking.DataModel.EyetrackingDatabaseEntity;
 import com.julia.Eyetracking.Tasks.InsertEyetrackingToDatabaseTask;
 
 import java.nio.ByteBuffer;
@@ -34,7 +34,7 @@ public class DatabaseRoomService extends Service {
      */
     private EyetrackingDatabase database;
     private static final int serializationItemThreshold = 60; //dump about once per second
-    private LinkedBlockingQueue<SerializableEyetrackingData> serializableDataQueue = new LinkedBlockingQueue<>();
+    private LinkedBlockingQueue<EyetrackingDatabaseEntity> serializableDataQueue = new LinkedBlockingQueue<>();
 
     /**
      * Target we publish for clients to send messages to IncomingMessageHandler.
@@ -83,14 +83,16 @@ public class DatabaseRoomService extends Service {
                 case EyetrackingServiceMessages.PARCEL_DATA:
                     EyetrackingData data = message.getData().getParcelable(Constants.EYETRACKING_DATA_PARCEL);
                     if (data != null) {
-                        this.serializableDataQueue.put(data.toSerializable());
+                        this.serializableDataQueue.put(data.toDatabaseEntity());
                     }
                     break;
                 case EyetrackingServiceMessages.FLATBUFFER_DATA:
                     ByteBuffer buffer = ByteBuffer.wrap(message.getData().getByteArray(Constants.EYETRACKING_DATA_BYTES));
                     buffer.position(message.getData().getInt(Constants.BYTE_BUFFER_POSITION));
-                    data = new EyetrackingData(buffer);
-                    this.serializableDataQueue.put(data.toSerializable());
+                    data = EyetrackingData.fromFlatBuffer(buffer);
+                    if (data != null) {
+                        this.serializableDataQueue.put(data.toDatabaseEntity());
+                    }
 
                     break;
             }
@@ -118,7 +120,7 @@ public class DatabaseRoomService extends Service {
     {
         Log.d(this.getClass().toString(), "Dumping Queue To database");
 
-        ArrayList<SerializableEyetrackingData> dataList = new ArrayList<>();
+        ArrayList<EyetrackingDatabaseEntity> dataList = new ArrayList<>();
         //drain the queue to a collection that will go into the database (freeing up the queue)
         this.serializableDataQueue.drainTo(dataList);
         this.database.dbOperations().insertBatchEyetrackingData(dataList);
@@ -132,11 +134,11 @@ public class DatabaseRoomService extends Service {
         Log.d(this.getClass().toString(), "Cleaning Queue into database on unbind");
         if(serializableDataQueue.size() > 0)
         {
-            ArrayList<SerializableEyetrackingData> dataList = new ArrayList<>();
+            ArrayList<EyetrackingDatabaseEntity> dataList = new ArrayList<>();
             this.serializableDataQueue.drainTo(dataList);
             //need the async task to carry this operation out from an unbind call
             InsertEyetrackingToDatabaseTask task = new InsertEyetrackingToDatabaseTask(this.database);
-            SerializableEyetrackingData[] array = new SerializableEyetrackingData[dataList.size()];
+            EyetrackingDatabaseEntity[] array = new EyetrackingDatabaseEntity[dataList.size()];
             array = dataList.toArray(array);
             task.execute(array);
         }

@@ -112,7 +112,7 @@ public class MainActivity extends AppCompatActivity {
         //update our visualization
         this.drawView.updateEye(data.getId(), new PointF(data.getNormalizedPosX(), data.getNormalizedPosY()), data.getPupilDiameter());
 
-        this.textView.setText(String.format(Locale.US,"Latency: %2f ms", averageLatency));
+        this.textView.setText(String.format(Locale.US,"Rate: %2f ms", averageLatency));
 
         //Log.d(this.getClass().toString(), data.getTimestamp().toString());
         //set the current time to last

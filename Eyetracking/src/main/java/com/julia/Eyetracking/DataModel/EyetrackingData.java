@@ -2,6 +2,7 @@ package com.julia.Eyetracking.DataModel;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.util.Log;
 
 import com.google.flatbuffers.FlatBufferBuilder;
 import com.julia.Eyetracking.DataModel.FlatBufferSchema.Message;
@@ -11,6 +12,7 @@ import java.util.UUID;
 
 /**
  * Class to hold the Eyetracking data Message with a Parcelable interface for passing to Binder framework
+ * Includes adapter methods to convert to a database entry and flat buffer serialization
  */
 public class EyetrackingData implements Parcelable {
 
@@ -27,9 +29,9 @@ public class EyetrackingData implements Parcelable {
         this.uniqueID = UUID.randomUUID().toString();
     }
 
-    public SerializableEyetrackingData toSerializable()
+    public EyetrackingDatabaseEntity toDatabaseEntity()
     {
-        SerializableEyetrackingData entity = new SerializableEyetrackingData();
+        EyetrackingDatabaseEntity entity = new EyetrackingDatabaseEntity();
         entity.setUniqueID(this.uniqueID);
         entity.setConfidence(this.confidence);
         entity.setId(this.id);
@@ -68,6 +70,37 @@ public class EyetrackingData implements Parcelable {
         Message.finishMessageBuffer(builder, msg);
         return builder.dataBuffer();
     }
+
+    /**
+     * Builder method to get data parcel from flat buffer
+     * @param flatBuffer
+     * @return
+     */
+    public static EyetrackingData fromFlatBuffer(ByteBuffer flatBuffer)
+    {
+        try {
+            Message in = Message.getRootAsMessage(flatBuffer);
+
+            EyetrackingData data = new EyetrackingData();
+            data.uniqueID = in.UniqueId();
+            data.timestamp = new Timestamp(in.Timestamp().seconds(), in.Timestamp().nanoseconds());
+            data.id = in.ID();
+            data.confidence = in.Confidence();
+            data.normalizedPosX = in.NormalizedPosX();
+            data.normalizedPosY = in.NormalizedPosY();
+            data.pupilDiameter = in.PupilDiameter();
+
+            return data;
+        }
+        catch (Exception e)
+        {
+            //problem in the deserialization, most likely.
+            Log.e(EyetrackingData.class.toString(), Log.getStackTraceString(e));
+            return null;
+        }
+
+    }
+
 
     /**
      * Getter/setter
@@ -143,18 +176,6 @@ public class EyetrackingData implements Parcelable {
         dest.writeFloat(this.normalizedPosX);
         dest.writeFloat(this.normalizedPosY);
         dest.writeInt(this.pupilDiameter);
-    }
-
-    public EyetrackingData(ByteBuffer flatBuffer)
-    {
-        Message in = Message.getRootAsMessage(flatBuffer);
-        this.uniqueID = in.UniqueId();
-        this.timestamp = new Timestamp(in.Timestamp().seconds(), in.Timestamp().nanoseconds());
-        this.id = in.ID();
-        this.confidence = in.Confidence();
-        this.normalizedPosX =  in.NormalizedPosX();
-        this.normalizedPosY = in.NormalizedPosY();
-        this.pupilDiameter = in.PupilDiameter();
     }
 
     protected EyetrackingData(Parcel in) {
